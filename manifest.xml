@@ -1,0 +1,30 @@
+<package>
+<description brief="Expression graphs for KDL">
+
+This package provides an expression tree framework for the Kinematics and Dynamics
+Library (KDL). 
+
+</description>
+<author>Erwin Aertbelien</author>
+<license>Proprietary</license>
+<review status="not yet reviewed" notes=""/>
+<url>http://www.orocos.org/XXXX</url>
+<export>
+  <cpp cflags="-I${prefix}/include" 
+       lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lexpressiongraph"/>
+  <doxymaker external="http://www.orocos.org/kdl" />
+</export>
+
+<!--
+<rosdep name="cppunit"/>
+-->
+<depend package="orocos_kdl"/>
+
+<rosdep name="pkg-config"/>
+<rosdep name="gtest"/>
+<!--<rosdep name="eigen"/>-->
+     <export>
+        <rosdoc config="rosdoc.yaml" />
+    </export>
+</package>
+
