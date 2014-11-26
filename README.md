@@ -48,4 +48,6 @@ This library is first release to the public at November,25th, 2014,
 This library links dynamically  with the KDL library (http://wiki.ros.org/kdl). The KDL library is distributed under LGPL.
 
 ### Contributing authors: ###
-*
+
+* Erwin Aertbeliën
+* Enea Scioni
