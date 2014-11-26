@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-include <kdl/expressiontree.hpp>
+#include <kdl/expressiontree.hpp>
 #include <fstream>
 #include <boost/timer.hpp>
 
