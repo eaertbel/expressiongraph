@@ -49,5 +49,5 @@ This library links dynamically  with the KDL library (http://wiki.ros.org/kdl). 
 
 ### Contributing authors: ###
 
-* Erwin Aertbeliën
-* Enea Scioni
+* Erwin Aertbeliën (eaertbel)
+* Enea Scioni (haianos)
