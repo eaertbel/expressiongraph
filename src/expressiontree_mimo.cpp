@@ -304,16 +304,16 @@ void MIMO::debug_printtree() {
 void MIMO::print(std::ostream& os) const {
     os << name << "(";
     for (size_t i=0;i<inputDouble.size();++i) {
-        inputDouble[i]->debug_printtree();
-        os << ",";
+        inputDouble[i]->print(os);
+        if (i!= inputDouble.size()-1) os << ",";
     }
     for (size_t i=0;i<inputFrame.size();++i) {
-        inputFrame[i]->debug_printtree();
-        os << ",";
+        inputFrame[i]->print(os);
+        if (i!= inputFrame.size()-1) os << ",";
     }
     for (size_t i=0;i<inputTwist.size();++i) {
-        inputTwist[i]->debug_printtree();
-        os << ",";
+        inputTwist[i]->print(os);
+        if (i!= inputTwist.size()-1) os << ",";
     }
     os << ")";
 }
