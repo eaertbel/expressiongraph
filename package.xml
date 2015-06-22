@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <name>expressiongraph</name>
+  <description>
+    This package provides an expression tree framework for the Kinematics 
+    and Dynamics Library (KDL). 
+  </description>
+  <version>0.1.0</version> <!-- TODO: is this correct? -->
+  <maintainer email="erwin.aertbelien@kuleuven.be">Erwin Aertbelien</maintainer>
+  <author email="erwin.aertbelien@kuleuven.be">Erwin Aertbelien</author>
+  <license>EUPL v1.1</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>orocos_kdl</build_depend>
+  <run_depend>orocos_kdl</run_depend>
+  <test_depend>gtest</test_depend>
+</package>

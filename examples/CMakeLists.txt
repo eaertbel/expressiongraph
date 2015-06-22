@@ -1,8 +1,37 @@
 IF(ENABLE_EXAMPLES)
 
+  set(EXAMPLES
+    geometry
+    expressiontree_example
+    expressiontree_example2
+    expressiontree_example3
+    expressiontree_example4
+    expressiontree_example5
+    expressiontree_example6
+    expressiontree_example7
+    expressiontree_example8
+    expressiontree_example9
+    expressiontree_example10
+    expressiontree_example11
+    expressiontree_example12
+    resolved_motion_rate_control
+    expressiontree_perpendicular
+    conversions_example
+    expressiontree_distance_to_line
+    expressiontree_conditional
+    expressiontree_cached_named
+    expressiontree_optimizer
+    expressiontree_mimo_ex
+    expressiontree_sensor
+    expressiontree_motion_profile
+    tutorial1
+    tutorial2
+    tutorial3
+    saturate
+    debug1)
+
  add_executable(geometry examples/geometry.cpp )
  TARGET_LINK_LIBRARIES(geometry ${PROJECT_NAME})
- 
 
  add_executable(expressiontree_example examples/expressiontree_example.cpp )
  TARGET_LINK_LIBRARIES(expressiontree_example ${PROJECT_NAME})
@@ -90,8 +119,6 @@ IF(ENABLE_EXAMPLES)
 
  add_executable(debug1 examples/debug1.cpp)
  TARGET_LINK_LIBRARIES(debug1 ${PROJECT_NAME})
-
-
 
 
 ENDIF(ENABLE_EXAMPLES)  
