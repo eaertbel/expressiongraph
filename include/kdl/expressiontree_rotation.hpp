@@ -29,17 +29,17 @@
 namespace KDL {
 /*
  * Rotation
- *      - RotX(Jacobian<double>)          					returns Jacobian<Rotation>
- *      - RotY(Jacobian<double>)          					returns Jacobian<Rotation>
- *      - RotZ(Jacobian<double>)          					returns Jacobian<Rotation>
- *      - Inverse(Jacobian<Rotation>)     					returns Jacobian<Rotation>
- *      - Jacobian<Rotation>*Jacobian<Rotation> 			returns Jacobian<Rotation>
- *      - Jacobian<Rotation>*Jacobian<Vector>				returns Jacobian<Vector>
- *      - UnitX( Jacobian<Rotation>)      					returns Jacobian<Vector>
- *      - UnitY( Jacobian<Rotation>)      					returns Jacobian<Vector>
- *      - UnitZ( Jacobian<Rotation>)      					returns Jacobian<Vector>
+ *      - RotX(Expression<double>::Ptr)          					returns Expression<Rotation>::Ptr
+ *      - RotY(Expression<double>::Ptr)          					returns Expression<Rotation>::Ptr
+ *      - RotZ(Expression<double>::Ptr)          					returns Expression<Rotation>::Ptr
+ *      - Inverse(Expression<Rotation>::Ptr)     					returns Expression<Rotation>::Ptr
+ *      - Expression<Rotation>::Ptr*Expression<Rotation::Ptr> 		returns Expression<Rotation>::Ptr
+ *      - Expression<Rotation>::Ptr*Expression<Vector::Ptr>			returns Expression<Vector>::Ptr
+ *      - UnitX( Expression<Rotation>::Ptr)      					returns Expression<Vector>::Ptr
+ *      - UnitY( Expression<Rotation>::Ptr)      					returns Expression<Vector>::Ptr
+ *      - UnitZ( Expression<Rotation>::Ptr)      					returns Expression<Vector>::Ptr
+ *      - construct_rotation_from_vectors                           returns Expression<Rotation>::Ptr
  */
-
 // Rot Double
 class Rot_Double:
     public UnaryExpression<KDL::Rotation, double>
@@ -436,6 +436,45 @@ inline Expression<KDL::Vector>::Ptr unit_z ( Expression<KDL::Rotation>::Ptr a) {
     );
     return expr;
 }
+
+class Construct_Rotation:
+    public TernaryExpression<KDL::Rotation, KDL::Vector, KDL::Vector, KDL::Vector>
+{
+public:
+    typedef TernaryExpression<KDL::Rotation, KDL::Vector, KDL::Vector, KDL::Vector> TExpr;
+public:
+    Construct_Rotation() {}  
+    Construct_Rotation( const TExpr::Argument1Expr::Ptr& arg1,
+                        const TExpr::Argument2Expr::Ptr& arg2,
+                        const TExpr::Argument3Expr::Ptr& arg3) : TExpr("construct_rotation",arg1,arg2,arg3) {}  
+    virtual KDL::Rotation value() {
+        return KDL::Rotation(argument1->value(), argument2->value(), argument3->value());
+    }
+    virtual KDL::Vector derivative(int i) {
+        KDL::Rotation R(argument1->value(), argument2->value(), argument3->value());
+        KDL::Rotation Rd(argument1->derivative(i), argument2->derivative(i), argument3->derivative(i));
+        KDL::Rotation omegax = Rd*R.Inverse();
+        KDL::Vector tmp(  (omegax(2,1)-omegax(1,2))/2.0,  ( omegax(0,2)-omegax(2,0))/2.0, (omegax(1,0)-omegax(0,1))/2.0 );  
+        return tmp;
+    } 
+    virtual Expression<Vector>::Ptr derivativeExpression(int i) {
+        assert( 0 /*not yet implemented */ );
+    }
+    virtual TExpr::Ptr clone() {
+        TExpr::Ptr expr( new Construct_Rotation( argument1->clone(), argument2->clone(), argument3->clone()));
+        return expr;
+    }
+};
+
+inline Expression<KDL::Rotation>::Ptr construct_rotation_from_vectors( Expression<KDL::Vector>::Ptr a, Expression<KDL::Vector>::Ptr b, Expression<KDL::Vector>::Ptr c) {
+    Expression<KDL::Rotation>::Ptr expr(
+        new Construct_Rotation(a,b,c) 
+    );
+    return expr;
+}
+
+
+
 
 } // end of namespace KDL
 #endif
