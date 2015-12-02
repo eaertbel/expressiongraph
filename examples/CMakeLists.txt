@@ -28,7 +28,8 @@ IF(ENABLE_EXAMPLES)
     tutorial2
     tutorial3
     saturate
-    debug1)
+    debug1
+    initial_value)
 
  add_executable(geometry examples/geometry.cpp )
  TARGET_LINK_LIBRARIES(geometry ${PROJECT_NAME})
@@ -58,8 +59,7 @@ IF(ENABLE_EXAMPLES)
  TARGET_LINK_LIBRARIES(expressiontree_example8 ${PROJECT_NAME})
  
  add_executable(expressiontree_example9 examples/expressiontree_example9.cpp )
- TARGET_LINK_LIBRARIES(expressiontree_example9 ${PROJECT_NAME})
- 
+ TARGET_LINK_LIBRARIES(expressiontree_example9 ${PROJECT_NAME}) 
  add_executable(expressiontree_example10 examples/expressiontree_example10.cpp )
  TARGET_LINK_LIBRARIES(expressiontree_example10 ${PROJECT_NAME})
  
@@ -101,6 +101,9 @@ IF(ENABLE_EXAMPLES)
 
  add_executable(expressiontree_motion_profile examples/expressiontree_motion_profile.cpp)
  TARGET_LINK_LIBRARIES(expressiontree_motion_profile ${PROJECT_NAME})
+
+ add_executable(initial_value examples/initial_value.cpp)
+ TARGET_LINK_LIBRARIES(initial_value ${PROJECT_NAME})
 
 
 

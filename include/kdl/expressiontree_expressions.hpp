@@ -1542,6 +1542,59 @@ inline typename Expression<R>::Ptr make_constant( const typename Expression<R>::
    return cnst;
 }
 
+/**
+ * This expressiongraph node represents a constant value corresponding to 
+ * the initial value of an expression. 
+ *
+ * Caveat:
+ *  - The initial value (time==0) should have occured before, otherwise its value is not cached.
+ *    (this is satisfied when time is always increasing and starts from zero)
+ *  - The resulting expression has derivatives zero, i.e. it is a constant.
+ */
+template<typename T>
+class InitialValueType: public BinaryExpression<T,double,T> {
+        T initial_value;
+    public:
+        typedef BinaryExpression<T,double,T> BinExpr;
+        typedef typename AutoDiffTrait<T>::DerivType DerivType; 
+
+        InitialValueType() {}
+
+        InitialValueType(Expression<double>::Ptr time_var, typename Expression<T>::Ptr arg):
+            BinExpr("initial_value", time_var, arg) {}
+
+        InitialValueType(Expression<double>::Ptr time_var, typename Expression<T>::Ptr arg, const T& _initial_value):
+            BinExpr("initial_value", time_var, arg), initial_value(_initial_value) {}
+
+        virtual T value() {
+            double time=this->argument1->value();
+            if (time==0) {
+                initial_value = this->argument2->value();
+            }
+            return initial_value; 
+        } 
+        
+        virtual DerivType derivative(int i) {
+            return AutoDiffTrait<T>::zeroDerivative();
+        }
+        virtual typename Expression<DerivType>::Ptr derivativeExpression(int i) {
+            return Constant(  AutoDiffTrait<T>::zeroDerivative());
+        }
+        virtual typename Expression<T>::Ptr clone() {
+            typename Expression<T>::Ptr expr(
+                new InitialValueType(this->argument1->clone(), this->argument2->clone(), initial_value)
+            );
+            return expr;
+        }
+};
+
+template<typename R>
+inline typename Expression<R>::Ptr initial_value( const typename Expression<double>::Ptr time, const typename Expression<R>::Ptr& arg ) {
+   typename Expression<R>::Ptr e(
+        new InitialValueType<R>( time,arg )
+   );
+   return e;
+}
 
 /**
  * - This class allows to optimize setInputValue() routines and optimizes
