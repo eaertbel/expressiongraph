@@ -126,5 +126,15 @@ Expression<Vector>::Ptr UnitZ_Rotation::derivativeExpression(int i) {
         }
 }
 
+Expression<Vector>::Ptr Get_Rotation_Vector::derivativeExpression(int i) {
+        int nr = getDep<Rotation>(i,argument);
+        if (nr==1) {
+            return Constant<Vector>(Vector::Zero());
+        } else {
+            return argument->derivativeExpression(i);
+        }
+}
+
+
 
 } // end of namespace KDL

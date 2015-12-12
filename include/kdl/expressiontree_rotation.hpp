@@ -473,6 +473,46 @@ inline Expression<KDL::Rotation>::Ptr construct_rotation_from_vectors( Expressio
     return expr;
 }
 
+//UnitZ Rotation
+class Get_Rotation_Vector:
+    public UnaryExpression<KDL::Vector, KDL::Rotation>
+{
+public:
+    typedef UnaryExpression<KDL::Vector, KDL::Rotation> UnExpr;
+    KDL::Vector val;
+public:
+    Get_Rotation_Vector() {}
+    Get_Rotation_Vector(
+                const   UnExpr::ArgumentExpr::Ptr& arg):
+                UnExpr("getRotVec",arg)
+                {}
+
+    virtual KDL::Vector value() {
+    	val = argument->value().GetRot();
+    	return val;
+    }
+
+    virtual KDL::Vector derivative(int i) {
+    	return argument->derivative(i);
+    }
+
+    virtual Expression<Vector>::Ptr derivativeExpression(int i);
+
+    virtual   UnExpr::Ptr clone() {
+        Expression<KDL::Vector>::Ptr expr(
+            new Get_Rotation_Vector( argument->clone())
+        );
+        return expr;
+    }
+};
+
+inline Expression<KDL::Vector>::Ptr getRotVec( Expression<KDL::Rotation>::Ptr a) {
+    Expression<KDL::Vector>::Ptr expr(
+        new Get_Rotation_Vector( a )
+    );
+    return expr;
+}
+
 
 
 
