@@ -903,6 +903,12 @@ inline void print(std::ostream& os, const KDL::Wrench& t) {
     os <<  "constant(Wrench(Vector(" << t.force(0) << "," << t.force(1) << "," << t.force(2)  << ")," 
                                << "Vector(" << t.torque(0) << "," << t.torque(1) << "," << t.torque(2)  << ")))";
 }
+
+template <int n, int m>
+inline void print(std::ostream& os, const Eigen::Matrix<double,n,m>&  t) {
+    os <<  "constant(Matrix["<<n<<","<<m<<"](" << t << "))";
+}
+
 }// namespace detail
 
 template<typename ResultType>
