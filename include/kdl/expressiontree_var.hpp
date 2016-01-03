@@ -153,6 +153,8 @@ public:
         );
         return expr;
     }
+
+    virtual ~VariableType() {}
 };
 
 
