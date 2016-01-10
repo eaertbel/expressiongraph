@@ -1,7 +1,13 @@
 #include <kdl/expressiontree.hpp>
 
 /*
- * Example on how to use VariableType
+ * Example on how to use the initial_value function.
+ * The initial_value functions takes time and another argument x.
+ * When time <= 0, the argument x is cached.
+ * When time >= 0, the cached argument is used instead of the current value of x.
+ *
+ * So, to have the correct semantics (i.e. an initial value of an expression), time has
+ * to monotoneously increase and start from zero, in your program.
  */
 int main(int argc, char* argv[]) {
 	using namespace KDL;

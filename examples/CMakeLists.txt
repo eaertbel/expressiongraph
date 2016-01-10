@@ -30,7 +30,8 @@ IF(ENABLE_EXAMPLES)
     saturate
     debug1
     matrix_traits
-    initial_value)
+    initial_value
+ )
 
  add_executable(matrix_traits examples/matrix_traits.cpp )
  TARGET_LINK_LIBRARIES(matrix_traits ${PROJECT_NAME} ${Eigen_LIBRARIES})
