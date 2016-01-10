@@ -92,7 +92,7 @@ public:
     virtual void getRotDependencies(std::set<int>& varset) {
     }
 
-
+    virtual void update_variabletype_from_original() {}
 
     /**
      * This class caches the computation of the derivative
@@ -153,6 +153,7 @@ public:
     virtual int number_of_derivatives() { 
         return argument->number_of_derivatives();
     }
+    virtual void update_variabletype_from_original() {}
 
     virtual Expression<Twist>::Ptr clone();
 

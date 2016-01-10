@@ -65,7 +65,9 @@ public:
     virtual void getDependencies(std::set<int>& varset);
     virtual void getScalarDependencies(std::set<int>& varset);
     virtual void getRotDependencies(std::set<int>& varset);
-    
+    virtual void update_variabletype_from_original();
+
+
     virtual void invalidate_cache();
 
     virtual void debug_printtree();
@@ -156,6 +158,10 @@ public:
         mimo->getRotDependencies(varset);
     }
 
+    virtual void update_variabletype_from_original() {
+        mimo->invalidate_cache();
+        mimo->update_variabletype_from_original();
+    }
 
     virtual void debug_printtree() {
         std::cout << Expression<ResultType>::name << "(";

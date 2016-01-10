@@ -55,9 +55,10 @@ public:
     typedef ResultType                                          ValueType;
     typedef typename std::vector<DerivType>                     JacobianType;
     
-public:
     typedef typename boost::shared_ptr<VariableType> Ptr;
 
+    /// pointer to the original VariableType object (when cloned)
+    VariableType<ResultType> *original;
     /// smart pointer to the current value:
     ValueType val;
     /// smart pointer to the current Jacobian:
@@ -73,7 +74,7 @@ public:
     VariableType() {} 
    
     VariableType(const std::vector<int>& _ndx):
-        FunctionType<ResultType>("variable"),deriv(_ndx.size()),ndx(_ndx) {
+        FunctionType<ResultType>("variable"),original(0),deriv(_ndx.size()),ndx(_ndx) {
             maxderiv = 0;
             for (size_t i=0;i<ndx.size();++i) {
                 ndx_map[ ndx[i] ] = i;
@@ -120,6 +121,14 @@ public:
     
     virtual void getRotDependencies(std::set<int>& varset) {
     }
+    virtual void update_variabletype_from_original() {
+        if (original != NULL) {
+            val = original->val;
+            for (int i=0;i<deriv.size();++i) {
+                deriv[i] = original->deriv[i];
+            }
+        }
+    }
 
     virtual DerivType derivative(int i) {
         std::map<int,int>::iterator it = ndx_map.find(i);     
@@ -144,13 +153,20 @@ public:
     }
 
     /**
-     * A clone does not clone the value and derivative that is this node refers to.
-     * Cloning also the value and derivative would make no sense, because it would point to a value that nobody can change. 
+     * if you clone an expression with a VariableType in it, also the VariableType
+     * is cloned, and thus no longer accessible from outside the expression.
      */
     virtual typename Expression<ResultType>::Ptr clone() {
-        typename Expression<ResultType>::Ptr expr(
+        typename VariableType<ResultType>::Ptr expr(
             new VariableType<ResultType>( ndx)
         );
+        expr->val = val;
+        expr->deriv = deriv;
+        if (original==NULL) {
+            expr->original = this;
+        } else {
+            expr->original = original;
+        }
         return expr;
     }
 

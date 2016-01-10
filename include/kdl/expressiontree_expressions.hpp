@@ -210,6 +210,11 @@ public:
     virtual void getRotDependencies(std::set<int>& varset) = 0;
 
     /**
+     * For all VariableType objects in the expression, update their value and Jacobian
+     * from the original VariableType (when they  cloned).
+     */
+    virtual void update_variabletype_from_original() = 0;
+    /**
      * get a named subexpression.
      * Cached nodes can be given a name.  A reference to these nodes
      * can be obtained using this name.  There are no checks for duplicate names, the behavior
@@ -442,6 +447,10 @@ public:
         argument->getRotDependencies(varset);
     }
 
+    virtual void update_variabletype_from_original() {
+        argument->update_variabletype_from_original();
+    }
+ 
     virtual void debug_printtree() {
         std::cout << Expression<ResultType>::name << "(";
         argument->debug_printtree();
@@ -575,6 +584,11 @@ public:
     virtual void getRotDependencies(std::set<int>& varset) {
         argument1->getRotDependencies(varset);
         argument2->getRotDependencies(varset);
+    }
+
+    virtual void update_variabletype_from_original() {
+        argument1->update_variabletype_from_original();
+        argument2->update_variabletype_from_original();
     }
 
 
@@ -765,6 +779,12 @@ public:
         argument3->getRotDependencies(varset);
     }
 
+    virtual void update_variabletype_from_original() {
+        argument1->update_variabletype_from_original();
+        argument2->update_variabletype_from_original();
+        argument3->update_variabletype_from_original();
+    }
+
     virtual void debug_printtree() {
         std::cout << Expression<ResultType>::name << "(";
         argument1->debug_printtree();
@@ -847,8 +867,6 @@ public:
     }
     virtual void getRotDependencies(std::set<int>& varset) {
     }
-
-
 
     virtual void print(std::ostream& os) const {
         os << "" << Expression<ResultType>::name;
@@ -947,7 +965,7 @@ public:
     virtual void print(std::ostream& os) const {
         detail::print(os,val);
     }
-
+    virtual void update_variabletype_from_original() {}
 
     virtual typename Expression<ResultType>::Ptr clone() {
         typename Expression<ResultType>::Ptr expr(
@@ -1023,7 +1041,8 @@ public:
     virtual void getRotDependencies(std::set<int>& varset) {
     }
 
-
+    virtual void update_variabletype_from_original() {
+    }
 
     virtual double derivative(int i) {
         if (variable_number == i) {
@@ -1125,6 +1144,10 @@ public:
     virtual void getRotDependencies(std::set<int>& varset) {
         varset.insert( variable_number);
     }
+
+    virtual void update_variabletype_from_original() {
+    }
+
 
 
     virtual Vector derivative(int i) {
@@ -1279,6 +1302,10 @@ public:
         argument->getRotDependencies(varset);
     }
 
+    virtual void update_variabletype_from_original() {
+        invalidate_cache();
+        argument->update_variabletype_from_original();
+    }
 
 
     virtual DerivType derivative(int i) {

@@ -280,6 +280,18 @@ void MIMO::getRotDependencies(std::set<int>& varset) {
     }
 }
 
+void MIMO::update_variabletype_from_original() {
+    for (size_t i=0;i<inputDouble.size();++i) {
+        inputDouble[i]->update_variabletype_from_original();
+    }
+    for (size_t i=0;i<inputFrame.size();++i) {
+        inputFrame[i]->update_variabletype_from_original();
+    }
+    for (size_t i=0;i<inputTwist.size();++i) {
+        inputTwist[i]->update_variabletype_from_original();
+    }
+}
+
 void MIMO::invalidate_cache() {
     cached=false;
 }
