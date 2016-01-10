@@ -24,6 +24,7 @@ IF(ENABLE_EXAMPLES)
     expressiontree_mimo_ex
     expressiontree_sensor
     expressiontree_motion_profile
+    expressiontree_variabletype
     tutorial1
     tutorial2
     tutorial3
@@ -38,6 +39,10 @@ IF(ENABLE_EXAMPLES)
 
  add_executable(geometry examples/geometry.cpp )
  TARGET_LINK_LIBRARIES(geometry ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
+ add_executable(expressiontree_variabletype examples/expressiontree_variabletype.cpp )
+ TARGET_LINK_LIBRARIES(expressiontree_variabletype ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
 
  add_executable(expressiontree_example examples/expressiontree_example.cpp )
  TARGET_LINK_LIBRARIES(expressiontree_example ${PROJECT_NAME} ${Eigen_LIBRARIES})
