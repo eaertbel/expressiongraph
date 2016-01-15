@@ -60,6 +60,7 @@ namespace KDL {
          */
         void compute_derivs();
         double pos(double time);
+        double d_pos_d_time(double time);
         double d_pos_d_spos(double time); 
         double d_pos_d_epos(double time);
         double d_pos_d_t(double time);

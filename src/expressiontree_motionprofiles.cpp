@@ -20,7 +20,7 @@ const double mp_eps = 1E-14;
 
         MPTrap::MPTrap():
             amax(1),vmax(1),spos(0),epos(0),duration(0),t1(0),t2(0),
-            s(1),dT(0), d_t1_d_dpos,d_t2_d_dpos, d_duration_d_dpos
+            s(1),dT(0), d_t1_d_dpos(0),d_t2_d_dpos(0), d_duration_d_dpos(0)
         {}
 
         void MPTrap::setPlan(double _spos, double _epos, double _vmax, double _amax) {
@@ -34,7 +34,7 @@ const double mp_eps = 1E-14;
             double dpos  = epos - spos;
             double s     = dpos >= 0 ? 1  : -1;
             t1           = vmax/amax;
-            dx           = s*amax*t1*t1/2.0;
+            double dx    = s*amax*t1*t1/2.0;
             dT           = (dpos -2*dx)*s/amax;
             if (dT>0) {
                 duration = 2*t1 + dT;
@@ -104,7 +104,7 @@ const double mp_eps = 1E-14;
             } else if (time < t1) {
                 return 1.;
             } else if (time < t2) {
-                return 1. - s*amax*t1*d_t1_d_dpos. + s*vmax*d_t1_d_dpos;
+                return 1. - s*amax*t1*d_t1_d_dpos + s*vmax*d_t1_d_dpos;
             } else if (time < duration) {
                 return s*amax*(duration-time)*d_duration_d_dpos;
             } else {
