@@ -32,7 +32,12 @@ IF(ENABLE_EXAMPLES)
     debug1
     matrix_traits
     initial_value
+    mptrap_tst
  )
+
+ add_executable(mptrap_tst examples/mptrap_tst.cpp )
+ TARGET_LINK_LIBRARIES(mptrap_tst ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
 
  add_executable(matrix_traits examples/matrix_traits.cpp )
  TARGET_LINK_LIBRARIES(matrix_traits ${PROJECT_NAME} ${Eigen_LIBRARIES})
