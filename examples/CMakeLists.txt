@@ -24,6 +24,7 @@ IF(ENABLE_EXAMPLES)
     expressiontree_mimo_ex
     expressiontree_sensor
     expressiontree_motion_profile
+    expressiontree_motion_profile2
     expressiontree_variabletype
     tutorial1
     tutorial2
@@ -116,6 +117,10 @@ IF(ENABLE_EXAMPLES)
 
  add_executable(expressiontree_motion_profile examples/expressiontree_motion_profile.cpp)
  TARGET_LINK_LIBRARIES(expressiontree_motion_profile ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
+ add_executable(expressiontree_motion_profile2 examples/expressiontree_motion_profile2.cpp)
+ TARGET_LINK_LIBRARIES(expressiontree_motion_profile2 ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
 
  add_executable(initial_value examples/initial_value.cpp)
  TARGET_LINK_LIBRARIES(initial_value ${PROJECT_NAME} ${Eigen_LIBRARIES})

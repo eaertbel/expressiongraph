@@ -14,6 +14,22 @@ include_directories(
 
 # BUILDING AND LINKING LIBRARY
 FILE( GLOB EXPRESSIONTREE_SRCS src/[^.]*.cpp src/[^.]*.cxx)
+
+set(EXPRESSIONTREE_SRCS
+    src/expressiontree_expressions.cpp  
+    src/expressiontree_motionprofiles.cpp    
+    src/expressiontree_rotation.cpp  
+    src/expressiontree_wrench.cpp
+    src/expressiontree_chain.cpp   
+    src/expressiontree_frame.cpp        
+    src/expressiontree_motprof.cpp           
+    src/expressiontree_twist.cpp     
+    src/mptrap.cpp
+    src/expressiontree_double.cpp  
+    src/expressiontree_mimo.cpp         
+    src/expressiontree_vector.cpp    
+    )
+
 add_library(${PROJECT_NAME} ${EXPRESSIONTREE_SRCS})
 target_link_libraries(${PROJECT_NAME} 
   ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${Eigen_LIBRARIES})
@@ -21,7 +37,8 @@ target_link_libraries(${PROJECT_NAME}
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  DEPENDS orocos_kdl Eigen)
+  DEPENDS orocos_kdl Eigen
+)
 
 
 # BUILDING AND LINKING TESTS
@@ -42,5 +59,5 @@ install(TARGETS ${PROJECT_NAME} ${EXAMPLES}
 install(DIRECTORY include/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hpp"
-  PATTERN ".svn" EXCLUDE)
+)
 
