@@ -22,7 +22,6 @@ set(EXPRESSIONTREE_SRCS
     src/expressiontree_wrench.cpp
     src/expressiontree_chain.cpp   
     src/expressiontree_frame.cpp        
-    src/expressiontree_motprof.cpp           
     src/expressiontree_twist.cpp     
     src/mptrap.cpp
     src/expressiontree_double.cpp  
