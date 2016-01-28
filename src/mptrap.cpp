@@ -18,6 +18,9 @@ void MPTrap::setPlan(double _spos, double _epos, double _vmax, double _amax) {
 double MPTrap::planMinDuration() {
     double dpos  = epos - spos;
     s            = dpos >= 0 ? 1  : -1;
+    if (fabs(dpos) < 1E-7) {
+        dpos = s*1E-7;
+    }
     t1           = vmax/amax;
     double dx    = s*amax*t1*t1/2.0;
     dT           = (dpos -2*dx)*s/vmax;
