@@ -36,6 +36,7 @@
 #include <set>
 #include <list>
 #include <cmath>
+#include <stdexcept>
 #include <kdl/expressiontree_traits.hpp>
 
 // colorscheme:
@@ -1757,7 +1758,9 @@ inline void CachedExpression::addToOptimizer(ExpressionOptimizer& opt) {
 
 template<typename T>
 inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a ) {
-        assert( !!a && "A null pointer is given as an argument");
+        if (!a) {
+            throw std::out_of_range("checkConstant: null pointer is given as an argument");
+        }
         std::set<int> vset;
         a->getDependencies(vset);
         if (vset.empty()) {
