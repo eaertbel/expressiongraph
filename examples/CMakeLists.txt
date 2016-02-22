@@ -34,7 +34,12 @@ IF(ENABLE_EXAMPLES)
     matrix_traits
     initial_value
     mptrap_tst
+    solving_and_cloning
  )
+
+ add_executable(solving_and_cloning examples/solving_and_cloning.cpp )
+ TARGET_LINK_LIBRARIES(solving_and_cloning ${PROJECT_NAME} ${Eigen_LIBRARIES})
+
 
  add_executable(mptrap_tst examples/mptrap_tst.cpp )
  TARGET_LINK_LIBRARIES(mptrap_tst ${PROJECT_NAME} ${Eigen_LIBRARIES})
