@@ -27,6 +27,24 @@
 
 namespace KDL {
 
+Expression<Vector>::Ptr RotVec_Double::derivativeExpression(int i) {
+        Expression<Vector>::Ptr arg1 = cached<Vector>( argument1 );
+        Expression<double>::Ptr   arg2 = cached<double>( argument2 );
+        int nr = getDep2<Vector,double>(i,argument1, argument2);
+        if (nr==1) {
+            return Constant<Vector>(Vector::Zero());
+        } 
+        if (nr==2) {
+            return argument1*argument2->derivativeExpression(i);
+        }
+        if (nr==3) {
+            return argument1->derivativeExpression(i)*argument2;
+        } else {
+            return argument1*argument2->derivativeExpression(i) + argument1->derivativeExpression(i)*argument2;
+        }
+}
+
+
 
 Expression<Vector>::Ptr Rot_Double::derivativeExpression(int i) {
         int nr = getDep<double>(i,argument);

@@ -23,6 +23,7 @@
 #define KDL_EXPRESSIONTREE_ROTATION_HPP
 
 #include <kdl/expressiontree_expressions.hpp>
+#include <kdl/expressiontree_vector.hpp>
 #include <kdl/frames.hpp>
 
 
@@ -84,6 +85,58 @@ inline Expression<KDL::Rotation>::Ptr rot(const KDL::Vector& axis, Expression<do
     );
     return expr;
 }
+
+/**
+ *
+ * Rot Double
+ *   argument1: rotation vector (should be normalized!)
+ *   argument2: rotation angle
+ * result:
+ *   Rotation matrix corresponding to rotating with angle around the given rotation vector.
+ */
+
+class RotVec_Double:
+    public BinaryExpression<KDL::Rotation, KDL::Vector, double>
+{
+public:
+    typedef BinaryExpression<KDL::Rotation, KDL::Vector, double> BinExpr;
+    KDL::Vector axis_value;
+    double      angle_value;
+public:
+    RotVec_Double() {}
+    RotVec_Double( 
+                const  BinExpr::Argument1Expr::Ptr& arg1,
+                const  BinExpr::Argument2Expr::Ptr& arg2
+                ):
+        BinExpr("rotVec",arg1,arg2)
+        {}
+
+    virtual KDL::Rotation value() {
+        axis_value = argument1->value();
+        angle_value= argument2->value();
+        return KDL::Rotation::Rot2(axis_value,angle_value);
+    }
+
+    virtual KDL::Vector derivative(int i) {
+        return axis_value*argument2->derivative(i) + argument1->derivative(i)*angle_value;
+    }
+    virtual Expression<Vector>::Ptr derivativeExpression(int i);
+
+    virtual  BinExpr::Ptr clone() {
+        Expression<KDL::Rotation>::Ptr expr(
+            new RotVec_Double(argument1->clone(), argument2->clone())
+        );
+        return expr;
+    }
+};
+
+inline Expression<KDL::Rotation>::Ptr rotVec(Expression<Vector>::Ptr a, Expression<double>::Ptr b) {
+    Expression<KDL::Rotation>::Ptr expr(
+        new RotVec_Double(a, b )
+    );
+    return expr;
+}
+
 
 
 // RotX Double
