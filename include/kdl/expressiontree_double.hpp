@@ -806,10 +806,24 @@ template <typename R>
 inline typename Expression<R>::Ptr conditional( typename Expression<double>::Ptr a1, 
                                        typename Expression<R>::Ptr a2,
                                        typename Expression<R>::Ptr a3) {
-    typename Expression<R>::Ptr expr(
-        new Conditional_double<R>( a1, a2, a3 )
-    );
-    return expr;
+    if (!a1 || !a2 || !a3) {
+        throw std::out_of_range("conditional: null pointer is given as one of the arguments");
+    }
+    std::set<int> vset;
+    a1->getDependencies(vset);
+    if (vset.empty()) {
+        double value = a1->value();
+        if (value >= 0) {
+            return a2;
+        } else {
+            return a3;
+        }
+    } else {
+        typename Expression<R>::Ptr expr(
+            new Conditional_double<R>( a1, a2, a3 )
+        );
+        return expr;
+    }
 }
 
 
