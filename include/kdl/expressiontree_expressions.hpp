@@ -1770,7 +1770,34 @@ inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a 
         }
 }
 
+template<typename T>
+inline bool isConstant( typename Expression<T>::Ptr a) {
+    if (!a) {
+        throw std::out_of_range("null pointer is given as an argument");
+    }
+    std::set<int> vset;
+    a->getDependencies(vset);
+    return vset.empty();
+}
 
+inline bool isConstantZero( Expression<double>::Ptr a) {
+    if (!a) {
+        throw std::out_of_range("null pointer is given as an argument");
+    }
+    std::set<int> vset;
+    a->getDependencies(vset);
+    return vset.empty() && (a->value()==0);
+}
+
+inline bool isConstantOne( Expression<double>::Ptr a) {
+    if (!a) {
+        throw std::out_of_range("null pointer is given as an argument");
+    }
+    std::set<int> vset;
+    a->getDependencies(vset);
+    double eps = 1E-16;
+    return vset.empty() && (1-eps <= a->value()) && (a->value() <= 1+eps);
+}
 
 
 /**

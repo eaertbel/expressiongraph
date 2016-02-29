@@ -88,7 +88,13 @@ public:
 };
 
 inline Expression<double>::Ptr operator+ ( Expression<double>::Ptr a1, Expression<double>::Ptr a2 ) {
-	 Expression<double>::Ptr expr(new Addition_DoubleDouble( a1, a2 ));
+    if (isConstantZero(a1)) {
+        return checkConstant<double>(a2);
+    } 
+    if (isConstantZero(a2)) {
+        return checkConstant<double>(a1);
+    } 
+	Expression<double>::Ptr expr(new Addition_DoubleDouble( a1, a2 ));
     return expr;
 }
 
@@ -124,11 +130,6 @@ public:
         return expr;
     }
 };
-
-inline Expression<double>::Ptr operator- ( Expression<double>::Ptr a1, Expression<double>::Ptr a2 ) {
-	Expression<double>::Ptr expr(new Subtraction_DoubleDouble( a1, a2 ));
-	return expr;
-}
 
 // *
 class Multiplication_DoubleDouble:
@@ -168,6 +169,18 @@ public:
 };
 
 inline Expression<double>::Ptr operator* ( Expression<double>::Ptr a1, Expression<double>::Ptr a2 ) {
+    if (isConstantZero(a1)) {
+        return Constant<double>(0);
+    } 
+    if (isConstantOne(a1)) {
+        return a2;
+    }
+    if (isConstantZero(a2)) {
+        return Constant<double>(0); 
+    } 
+    if (isConstantOne(a2)) {
+        return a1;
+    }
 	Expression<double>::Ptr expr(new Multiplication_DoubleDouble( a1, a2 ));
 	return expr;
 }
@@ -211,6 +224,9 @@ public:
 };
 
 inline Expression<double>::Ptr operator/ ( Expression<double>::Ptr a1, Expression<double>::Ptr a2 ) {
+    if (isConstantZero(a1)) {
+        return Constant<double>(0);
+    } 
 	Expression<double>::Ptr expr(new Division_DoubleDouble( a1, a2 ));
 	return expr;
 }
@@ -296,6 +312,17 @@ inline Expression<double>::Ptr operator-( Expression<double>::Ptr a) {
         new Negate_Double(a)
     );
     return expr;
+}
+
+inline Expression<double>::Ptr operator- ( Expression<double>::Ptr a1, Expression<double>::Ptr a2 ) {
+    if (isConstantZero(a1)) {
+        return checkConstant<double>(-a2);
+    } 
+    if (isConstantZero(a2)) {
+        return checkConstant<double>(a1);
+    } 
+	Expression<double>::Ptr expr(new Subtraction_DoubleDouble( a1, a2 ));
+	return expr;
 }
 
 // sin
