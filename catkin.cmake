@@ -6,6 +6,13 @@ find_package(catkin REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ${PROJECT_NAME}
+  DEPENDS orocos_kdl Eigen
+)
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -32,13 +39,6 @@ set(EXPRESSIONTREE_SRCS
 add_library(${PROJECT_NAME} ${EXPRESSIONTREE_SRCS})
 target_link_libraries(${PROJECT_NAME} 
   ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${Eigen_LIBRARIES})
-
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  DEPENDS orocos_kdl Eigen
-)
-
 
 # BUILDING AND LINKING TESTS
 catkin_add_gtest(${PROJECT_NAME}_test tests/expressiongraph_test.cpp) 
