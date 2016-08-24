@@ -31,7 +31,7 @@ namespace KDL {
  *
  * Operations:
  * 		Binary: + - * / atan2
- * 		Unary:  - sin cos tan asin acos exp log sqrt atan abs
+ * 		Unary:  - sin cos tan asin acos exp log sqrt atan abs fmod
  * Corresponding Expression objects:
  *      Binary:
  *      -  Addition_DoubleDouble 
@@ -51,6 +51,7 @@ namespace KDL {
  *      -  Log_Double
  *      -  Atan_Double
  *      -  Abs_Double
+ *      -  Fmod_Double
  */
 
 // +
@@ -728,6 +729,46 @@ inline Expression<double>::Ptr abs( Expression<double>::Ptr a) {
     return expr;
 }
 
+// fmod
+class Fmod_Double:
+    public UnaryExpression<double, double>
+{
+public:
+    typedef UnaryExpression<double, double> UnExpr;
+    double denominator;
+public:
+    Fmod_Double() {}
+    Fmod_Double(const UnExpr::ArgumentExpr::Ptr& arg,
+                double _denominator):
+                UnExpr("fmod",arg),
+                denominator(_denominator)
+                {}
+    virtual double value() {
+        return fmod(argument->value(), denominator);
+    }
+
+    virtual double derivative(int i) {
+        // Note: This is a simplified version of the derivative which
+        // ignores that fmod(x,b)=infinity for x=n*b with n being an integer.
+        return argument->derivative(i);
+    }
+
+    virtual Expression<double>::Ptr derivativeExpression(int i);
+
+    virtual  UnExpr::Ptr clone() {
+        Expression<double>::Ptr expr(
+            new Fmod_Double(argument->clone(), denominator)
+        );
+        return expr;
+    }
+};
+
+inline Expression<double>::Ptr fmod( Expression<double>::Ptr a, double b) {
+    Expression<double>::Ptr expr(
+        new Fmod_Double( a, b )
+    );
+    return expr;
+}
 
 //sqrt
 class Sqr_Double:

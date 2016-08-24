@@ -218,4 +218,15 @@ namespace KDL {
         return Expression<double>::Ptr();
     }
 
+    Expression<double>::Ptr Fmod_Double::derivativeExpression(int i) {
+        // Note: This is a simplified version of the derivative which
+        // ignores that fmod(x,b)=infinity for x=n*b with n being an integer.
+        int nr = getDep<double>(i,argument);
+        if (nr==1) {
+            return Constant<double>(0.0);
+        } else {
+            return argument->derivativeExpression(i);
+        }
+    }
+
 } // end of namespace KDL
