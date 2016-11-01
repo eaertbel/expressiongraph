@@ -91,6 +91,8 @@ class Expression;
 class ExpressionBase {
 public:
    typedef boost::shared_ptr< ExpressionBase > Ptr;
+
+
    /**
      * Fills in the input values for this expression. 
      * This method call is passed through to all underlying nodes of the expression tree.
@@ -243,6 +245,15 @@ public:
 
     virtual void write_dotfile_init() = 0;
 
+    /**
+     * if the expression is a scalar variable (i.e. InputType object) this
+     * method will return the variable index number.
+     * Otherwise it returns -1.
+     */
+    virtual int isScalarVariable() = 0;
+
+
+
     virtual ~ExpressionBase() {}
 };
 
@@ -376,6 +387,10 @@ public:
      * (can be overridden by nodes inheriting from this base class).
      */
     virtual void write_dotfile_init() {
+    }
+
+    virtual int isScalarVariable() {
+        return -1;
     }
 
     virtual ~Expression() {
@@ -1065,6 +1080,9 @@ public:
         return variable_number+1;
     };
 
+    virtual int isScalarVariable() {
+        return variable_number;
+    }
     /**
      * \warn  Default value for the cloned object will be the value of the original InputType object.
      */
