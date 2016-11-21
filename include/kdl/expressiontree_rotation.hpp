@@ -24,6 +24,7 @@
 
 #include <kdl/expressiontree_expressions.hpp>
 #include <kdl/expressiontree_vector.hpp>
+#include <kdl/expressiontree_double.hpp>
 #include <kdl/frames.hpp>
 
 
@@ -526,7 +527,6 @@ inline Expression<KDL::Rotation>::Ptr construct_rotation_from_vectors( Expressio
     return expr;
 }
 
-//UnitZ Rotation
 class Get_Rotation_Vector:
     public UnaryExpression<KDL::Vector, KDL::Rotation>
 {
@@ -566,6 +566,57 @@ inline Expression<KDL::Vector>::Ptr getRotVec( Expression<KDL::Rotation>::Ptr a)
     return expr;
 }
 
+class Get_RPY_Rotation:
+    public UnaryExpression<KDL::Vector, KDL::Rotation>
+{
+public:
+    typedef UnaryExpression<KDL::Vector, KDL::Rotation> UnExpr;
+    KDL::Vector val;
+    double m00,m01,m02,m10,m11,m12,m20,m21,m22;
+public:
+    Get_RPY_Rotation() {}
+    Get_RPY_Rotation(
+                const   UnExpr::ArgumentExpr::Ptr& arg):
+                UnExpr("getRPY",arg)
+                {}
+
+    virtual KDL::Vector value() {
+    	argument->value().GetRPY(val[0],val[1],val[2]);
+        double ca = cos(val[2]);
+        double sa = sin(val[2]);
+        double cb = cos(val[1]);
+        double sb = sin(val[1]);
+        m00 = ca/cb;   m01 = sa/cb;    m02 = 0.0;
+        m10 = -sa;     m11 = ca;       m12 = 0.0;
+        m20 = ca*sb/cb;m21 = sa*sb/cb; m22 = 1.0; 
+    	return val;
+    }
+
+    virtual KDL::Vector derivative(int i) {
+        Vector omega = argument->derivative(i);
+        Vector result;
+        result[0] = m00*omega[0] + m01*omega[1] + m02*omega[2];
+        result[1] = m10*omega[0] + m11*omega[1] + m12*omega[2];
+        result[2] = m20*omega[0] + m21*omega[1] + m22*omega[2];
+    	return result;
+    }
+
+    virtual Expression<Vector>::Ptr derivativeExpression(int i);
+
+    virtual   UnExpr::Ptr clone() {
+        Expression<KDL::Vector>::Ptr expr(
+            new Get_RPY_Rotation( argument->clone())
+        );
+        return expr;
+    }
+};
+
+inline Expression<KDL::Vector>::Ptr getRPY( Expression<KDL::Rotation>::Ptr a) {
+    Expression<KDL::Vector>::Ptr expr(
+        new Get_RPY_Rotation( a )
+    );
+    return expr;
+}
 
 
 

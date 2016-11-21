@@ -153,6 +153,27 @@ Expression<Vector>::Ptr Get_Rotation_Vector::derivativeExpression(int i) {
         }
 }
 
+Expression<Vector>::Ptr Get_RPY_Rotation::derivativeExpression(int i) {
+        int nr = getDep<Rotation>(i,argument);
+        if (nr==1) {
+            return Constant<Vector>(Vector::Zero());
+        } else {
+            Expression<Vector>::Ptr omega = argument->derivativeExpression(i);
+            Expression<Vector>::Ptr rpy   = getRPY( argument);
+            Expression<double>::Ptr ca    = cos( coord_z(rpy) );
+            Expression<double>::Ptr sa    = sin( coord_z(rpy) );
+            Expression<double>::Ptr cb    = cos( coord_y(rpy) );
+            Expression<double>::Ptr sb    = sin( coord_y(rpy) );
+            return vector(
+                    ca/cb*coord_x(omega) +    sa/cb*coord_y(omega),
+                      -sa*coord_x(omega) +       ca*coord_y(omega),
+                 ca*sb/cb*coord_x(omega) + sa*sb/cb*coord_y(omega) + coord_z(omega)
+            );
+        }
+}
+
+
+
 
 
 } // end of namespace KDL
