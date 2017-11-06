@@ -918,7 +918,7 @@ public:
 
     virtual R value() {
         double val = this->argument1->value();
-        condition = (tolerance<=val) && (val<=tolerance);
+        condition = (-tolerance<=val) && (val<=tolerance);
         if (condition) {
             return this->argument2->value(); 
         } else {
