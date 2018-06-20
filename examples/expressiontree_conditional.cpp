@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	using namespace std;
 
     Expression<double>::Ptr f =
-        conditional<double>(
+        KDL::conditional<double>(
             input(0)-Constant(5.0),
             (input(0)-Constant(5.0))*(input(0)-Constant(5.0)),
             Constant(0.0)
