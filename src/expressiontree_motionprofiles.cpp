@@ -243,7 +243,6 @@ Expression<double>::Ptr MotionProfileTrapezoidal::getMaxVelocity(int idx) {
 
 Expression<double>::Ptr MotionProfileTrapezoidal::getMaxAcceleration(int idx) {
     if ( (0<=idx) && (idx < nrOfOutputs() ) ) {
-        return inputDouble[idx*2+4];
         return inputDouble[idx*grp_size+grp_offset+idx_maxacc];
     } else {
         throw std::out_of_range("MotionProfileTrapezoidal::getMaxAcceleration argument out of range");
