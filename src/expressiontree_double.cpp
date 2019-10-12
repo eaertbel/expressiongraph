@@ -229,4 +229,6 @@ namespace KDL {
         }
     }
 
+boost::mt19937 rng; 
+
 } // end of namespace KDL

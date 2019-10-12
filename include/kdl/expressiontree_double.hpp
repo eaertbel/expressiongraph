@@ -23,6 +23,9 @@
 #define KDL_EXPRESSIONTREE_DOUBLE_HPP
 
 #include <kdl/expressiontree_expressions.hpp>
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
+
 
 namespace KDL {
 
@@ -1045,8 +1048,6 @@ public:
     } 
 };
 
-
-
 class BlockWave_double:
     public UnaryExpression<double,double>
 {
@@ -1113,6 +1114,63 @@ inline typename Expression<R>::Ptr blockwave( typename Expression<double>::Ptr a
     return expr;
 }
 
+
+extern boost::mt19937 rng; 
+
+class NormalDistributedNoise_double:
+    public UnaryExpression<double,double>
+{
+
+    boost::normal_distribution<> nd;
+
+    boost::variate_generator<boost::mt19937&, 
+                           boost::normal_distribution<> > noise;
+
+public:
+    double stddev;
+
+    NormalDistributedNoise_double():stddev(1.0),nd(0.0,1.0), noise(rng, nd) {}
+
+    NormalDistributedNoise_double( Expression<double>::Ptr a1, double _stddev):
+        UnaryExpression<double,double>("normal_distributed_noise",a1), 
+        stddev(_stddev), 
+        nd(0.0,_stddev),
+        noise(rng,nd) {}
+
+    virtual double value() {
+        return noise();
+    } 
+
+    virtual double derivative(int i) {
+        return 0.0;
+    }
+    virtual  Expression<double>::Ptr derivativeExpression(int i) {
+        return Constant(0.0);
+    }
+
+    virtual  Expression<double>::Ptr clone() {
+         Expression<double>::Ptr expr(
+            new NormalDistributedNoise_double(this->argument->clone(), stddev )
+        );
+        return expr;
+    } 
+};
+/**
+ * An expression tree node for normal-distributed random noise
+ * (with zero derivative)
+ *   
+ * @param time  It should have time as an argument, just to ensure updates to the computed value at
+ * each time interval.
+ *
+ * @param stddev The standard deviation of the generated random noise 
+ *
+ */
+inline typename Expression<double>::Ptr normaldistributednoise( typename Expression<double>::Ptr a1,double stddev) {
+    typename Expression<double>::Ptr expr(
+        new NormalDistributedNoise_double( a1, stddev )
+    );
+    return expr;
+}
 
 
 

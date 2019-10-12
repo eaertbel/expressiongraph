@@ -6,7 +6,7 @@ find_package(catkin REQUIRED)
 find_package(orocos_kdl REQUIRED)
 find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
-
+find_package(Boost REQUIRED COMPONENTS random)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
@@ -18,7 +18,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${orocos_kdl_INCLUDE_DIRS})
+  ${orocos_kdl_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS})
 
 # BUILDING AND LINKING LIBRARY
 FILE( GLOB EXPRESSIONTREE_SRCS src/[^.]*.cpp src/[^.]*.cxx)
@@ -39,12 +40,12 @@ set(EXPRESSIONTREE_SRCS
 
 add_library(${PROJECT_NAME} ${EXPRESSIONTREE_SRCS})
 target_link_libraries(${PROJECT_NAME} 
-  ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${EIGEN3_LIBRARIES})
+  ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${EIGEN3_LIBRARIES} ${Boost_LIBRARIES})
 
 # BUILDING AND LINKING TESTS
 catkin_add_gtest(${PROJECT_NAME}_test tests/expressiongraph_test.cpp) 
 target_link_libraries(${PROJECT_NAME}_test
-  ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${PROJECT_NAME} ${EIGEN3_LIBRARIES})
+  ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${Boost_LIBRARIES})
 
 # POTENTIALLY, BUILDING AND LINKING EXAMPLES
 OPTION(ENABLE_EXAMPLES "enable compilation of a series of examples" ON) 
