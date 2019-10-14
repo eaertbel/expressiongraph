@@ -1138,7 +1138,12 @@ public:
         noise(rng,nd) {}
 
     virtual double value() {
-        return noise();
+        double time = this->argument->value();
+        if (time==0) {
+            return 0.0;
+        } else {
+            return noise();
+        }
     } 
 
     virtual double derivative(int i) {
@@ -1164,6 +1169,8 @@ public:
  *
  * @param stddev The standard deviation of the generated random noise 
  *
+ * if time == 0, then the noise is also zero ( such that the convergence criteria for the initialization procedure
+ * still works).
  */
 inline typename Expression<double>::Ptr normaldistributednoise( typename Expression<double>::Ptr a1,double stddev) {
     typename Expression<double>::Ptr expr(
