@@ -76,7 +76,9 @@
      *                    (corresponding to s==1).
      *   slerpUnit(qn1,qn2,s) : spherical linear interpolation between UNIT quaternion q1 (corresponding to s==0) and 
      *                      UNIT quaternion q2 (corresponding to s==1).
-     *
+     *   diff(q1,q2)     : q2-q1
+     *   diffUnit(q1,q2) : difference over the sphere, i.e. rotational velocity  that you need to go from q1 to q2 in 
+     *                     one unit of time, i.e. angle-axis to go from q1 to q2
      *   toQuat(R)      : returns the quaternion corresponding to the given rotation matrix
      *   toRot(qn)       : returns the rotation matrix corresponding to the given unit quaternion.
      *   quaternion(s,v),
@@ -1134,7 +1136,7 @@ namespace KDL {
         return exp( s*logUnit(q) );
     }
 
-    inline Expression<Vector>::Ptr diff( 
+    inline Expression<Vector>::Ptr diffUnit( 
             Expression<Quaternion>::Ptr q1, 
             Expression<Quaternion>::Ptr q2) {
         return conditional<Vector>( dot(q1,q2), 
@@ -1142,6 +1144,13 @@ namespace KDL {
                     logUnit(-q2*conj(q1) )*Constant<double>(2.0)
                );
     }
+/*
+    inline Expression<Quaternion>::Ptr diff( 
+            Expression<Quaternion>::Ptr q1, 
+            Expression<Quaternion>::Ptr q2) {
+        return (q2-q1);
+    }
+*/
 
 
     inline Expression<Quaternion>::Ptr toQuat( 

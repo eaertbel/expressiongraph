@@ -101,7 +101,7 @@ void test_diff(double dt) {
     cout << "omega computed via rot. matrices forr exact diff  " << omega  << endl;
     cout << "diff using log " << log(q2*inv(q1) )/dt*2.0 << endl;
     cout << "diff using logUnit " << logUnit(q2*inv(q1) )/dt*2.0 << endl;
-    cout << "diff using diff " << diff(q1,q2)/dt << endl;
+    cout << "diff using diff " << diffUnit(q1,q2)/dt << endl;
 } 
 
 
@@ -162,13 +162,13 @@ void test_diff(Quaternion q1, Quaternion q2, Quaternion q3) {
     cout << "q2 : " << q2 << " ( angle (DEG) : " << angle/PI*180.0 << " and axis : " << axis << ")" << endl;
     axis_angle(q3,axis, angle);
     cout << "q3 : " << q3 << " ( angle (DEG) : " << angle/PI*180.0 << " and axis : " << axis << ")" << endl;
-    axis = diff(q1,q2);
+    axis = diffUnit(q1,q2);
     cout << "diff(q1,q2) : "  << axis << " norm [DEG] " << axis.Norm()/PI*180.0 << endl;
-    axis = diff(q1,-q2);
+    axis = diffUnit(q1,-q2);
     cout << "diff(q1,-q2) : " << axis << " norm [DEG] " << axis.Norm()/PI*180.0 << endl;
-    axis = diff(q1,q3);
+    axis = diffUnit(q1,q3);
     cout << "diff(q1,q3) : "  << axis << " norm [DEG] " << axis.Norm()/PI*180.0 << endl;
-    axis = diff(q1,-q3);
+    axis = diffUnit(q1,-q3);
     cout << "diff(q1,-q3) : " << axis << " norm [DEG] " << axis.Norm()/PI*180.0 << endl;
 } 
 

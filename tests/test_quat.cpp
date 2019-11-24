@@ -1,398 +1,4 @@
-#include <kdl/expressiontree_quaternion.hpp>
-#include <kdl/expressiontree.hpp>
-#include <gtest/gtest.h>
-#include <string.h>
-
-
-
-namespace KDL {
-
-int debug_output = 0;    // output additional debug values
-int simple_values = 0;   // choose simple values, i.e. var. i has value i, otherwise random values are used.
-
-/**
- * generate random entities for expression graphs of a given type.
- * \param [in] ndx, the random entities will depend on the variable numbers given by ndx.
- */
-template <class T>
-typename Expression<T>::Ptr random(std::vector<int>& ndx);
-
-
-template<> Expression<double>::Ptr random<double>(std::vector<int>& ndx) {
-    Expression<double>::Ptr result;
-    if (ndx.size() > 0) {
-        double a,b;
-        random(a);
-        random(b);
-        result = Constant(a)*input(ndx[0])+Constant(b);
-        for (size_t i=1;i<ndx.size();++i) {
-            random(a);
-            result = result + Constant(a)*input(ndx[i]);
-        }
-    }
-    return result; 
-}
-
-template<> Expression<Vector>::Ptr random<Vector>(std::vector<int>& ndx) {
-    return KDL::vector( random<double>(ndx), random<double>(ndx), random<double>(ndx) );
-}
-
-template<> Expression<Rotation>::Ptr random<Rotation>(std::vector<int>& ndx) {
-    return rot_x( random<double>(ndx)) * rot_y(random<double>(ndx)) * rot_z(random<double>(ndx));
-}
-
-template<> Expression<Frame>::Ptr random<Frame>(std::vector<int>& ndx) {
-    return frame( random<Rotation>(ndx), random<Vector>(ndx) );
-}
-
-template<> Expression<Twist>::Ptr random<Twist>(std::vector<int>& ndx) {
-    return twist( random<Vector>(ndx), random<Vector>(ndx) );
-}
-
-template<> Expression<Wrench>::Ptr random<Wrench>(std::vector<int>& ndx) {
-    return wrench( random<Vector>(ndx), random<Vector>(ndx) );
-}
-
-template<> Expression<Quaternion>::Ptr random<Quaternion>(std::vector<int>& ndx) {
-    return quaternion( random<double>(ndx), random<Vector>(ndx) );
-}
-
-template <class T>
-typename Expression<T>::Ptr testvar(int& ndx);
-
-
-template<> Expression<double>::Ptr testvar<double>(int& ndx) {
-    return input(ndx++);
-}
-
-template<> Expression<Vector>::Ptr testvar<Vector>(int& ndx) {
-    return KDL::vector( testvar<double>(ndx), testvar<double>(ndx), testvar<double>(ndx) );
-}
-
-template<> Expression<Rotation>::Ptr testvar<Rotation>(int& ndx) {
-    return rot_x( testvar<double>(ndx)) * rot_y(testvar<double>(ndx)) * rot_z(testvar<double>(ndx));
-}
-
-template<> Expression<Frame>::Ptr testvar<Frame>(int& ndx) {
-    return frame( testvar<Rotation>(ndx), testvar<Vector>(ndx) );
-}
-
-template<> Expression<Twist>::Ptr testvar<Twist>(int& ndx) {
-    return twist( testvar<Vector>(ndx), testvar<Vector>(ndx) );
-}
-
-template<> Expression<Wrench>::Ptr testvar<Wrench>(int& ndx) {
-    return wrench( testvar<Vector>(ndx), testvar<Vector>(ndx) );
-}
-
-template<> Expression<Quaternion>::Ptr testvar<Quaternion>(int& ndx) {
-    return quaternion( testvar<double>(ndx), testvar<Vector>(ndx) );
-}
-
-
-/******************************************************************************************************
- * CHECKING VALUE-TYPES
- ****************************************************************************************************/
-
-bool Equal(Quaternion q1, const Quaternion& q2, double eps) {
-    double c = dot(q1,q2);
-    if (c<0) {
-        q1=-q1;
-    }
-    if (fabs(q1.w-q2.w) > eps) return false;
-    if (fabs(q1.vec[0]-q2.vec[0]) > eps) return false;
-    if (fabs(q1.vec[1]-q2.vec[1]) > eps) return false;
-    if (fabs(q1.vec[2]-q2.vec[2]) > eps) return false;
-    return true;
-}
-
-::testing::AssertionResult checkVectorValues(const char* astr, const char* bstr, Vector q1, Vector q2) {
-    double eps = 1E-8;
-    if (debug_output) {
-        std::cout << "Comparing " << q1 << std::endl;
-        std::cout << "      and " << q2 << std::endl;   
-    }
-    if (!Equal(q1,q2,eps)) {
-        return ::testing::AssertionFailure() 
-           << "quaternions are not equal : \n"
-           << astr << " : " << q1 << "\n"
-           << bstr << " : " << q2 << "\n"
-           << std::endl;
-    }
-    return ::testing::AssertionSuccess();
-}
-
-#define EXPECT_EQ_VECTOR( a, b ) \
-    EXPECT_PRED_FORMAT2(checkVectorValues,a, b );
-
-
-
-::testing::AssertionResult checkQuatValues(const char* astr, const char* bstr, Quaternion q1, Quaternion q2) {
-    double eps = 1E-8;
-    if (debug_output) {
-        std::cout << "Comparing " << q1 << std::endl;
-        std::cout << "      and " << q2 << std::endl;
-    } 
-    if (!Equal(q1,q2,eps)) {
-        return ::testing::AssertionFailure() 
-           << "quaternions are not equal : \n"
-           << astr << " : " << q1 << "\n"
-           << bstr << " : " << q2 << "\n"
-           << std::endl;
-    }
-    return ::testing::AssertionSuccess();
-}
-
-#define EXPECT_EQ_QUAT( a, b ) \
-    EXPECT_PRED_FORMAT2(checkQuatValues,a, b );
-
-/******************************************************************************************************
- * CHECKING EXPRESSION TYPES 
- ****************************************************************************************************/
-
-
-/**
- * compares the <b>value</b> of two expression graphs.  It fills in random values with setInputValue(..).
- * For each of the expressions the same value is filled in.  After that, the expressions are compared.
- */
-template<class T>
-::testing::AssertionResult         
-EqualValues(const char* astr, const char* bstr, boost::shared_ptr< Expression<T> > a, boost::shared_ptr< Expression<T> > b) {
-    double eps = 1E-4;
-    int n1 = a->number_of_derivatives();
-    int n2 = b->number_of_derivatives();
-    // fill in arbitrary input values:
-    for (int i=0;i<max(n1,n2);++i) {
-        double arg;
-        random(arg);
-        a->setInputValue(i,arg);
-        b->setInputValue(i,arg);
-    }
-    // compare:
-    T va = a->value();
-    T vb = b->value();
-    if (debug_output) { 
-        std::cout << "Comparing " << va << std::endl;
-        std::cout << "      and " << vb << std::endl;
-    }
-    if (!Equal(va,vb,eps)) {
-          std::stringstream os;
-          os << "false because the value of the expressions is not equal  : \n"; 
-          os << astr << " : \n";
-          os << va << "\n";
-          os << bstr << " : \n";
-          os << vb;
-          os << std::endl;
-          return ::testing::AssertionFailure() << os.str();
-    }
-    for (int i=0;i<max(n1,n2);++i) {
-        typedef typename AutoDiffTrait<T>::DerivType Td;
-        Td ad = a->derivative(i);
-        Td bd = b->derivative(i);
-        if (debug_output) {
-            std::cout << "      Comparing derivative : " << ad << std::endl;
-            std::cout << "                       and : " << bd << std::endl;
-        }
-        if (!Equal(ad, bd,eps ) ) {
-              std::stringstream os;
-              os << "false because derivative " << i << " of the expressions is not equal  : \n"; 
-              os << astr << " : \n";
-              os << "value : "  << va << "\n";
-              os << bstr << " : \n";
-              os << "value : "  << vb << "\n";
-              os << astr << " : \n";
-              os << "derivative " << i << " : " << ad << "\n";
-              os << bstr << " : \n";
-              os << "derivative " << i << " : " << bd;
-              os << std::endl;
-              return ::testing::AssertionFailure() << os.str();
-        }
-    }
-    return ::testing::AssertionSuccess();
-}
-
-/**
- * Specialization for quaternions.  To deal with double covering and derivatives:
- * To correctly interprete a comparision of derivatives, you also need to look at the
- * position-level variables.
- */
-template<>
-::testing::AssertionResult         
-EqualValues(const char* astr, const char* bstr, boost::shared_ptr< Expression<Quaternion> > a, boost::shared_ptr< Expression<Quaternion> > b) {
-    double eps = 1E-4;
-    int n1 = a->number_of_derivatives();
-    int n2 = b->number_of_derivatives();
-    // fill in arbitrary input values:
-    for (int i=0;i<max(n1,n2);++i) {
-        double arg;
-        random(arg);
-        a->setInputValue(i,arg);
-        b->setInputValue(i,arg);
-    }
-    // compare:
-    Quaternion va = a->value();
-    Quaternion vb = b->value();
-    double c = dot(va,vb);
-    if (c<0) {
-        va = -va;        
-    }
-    if (debug_output) {
-        std::cout << "Quaternion" << std::endl;
-        std::cout << "Comparing " << va;
-        if (c<0) {
-            std::cout << "  (switched sign to take into account double covering of quaterions) ";
-        }
-        std::cout << std::endl;
-        std::cout << "      and " << vb << std::endl;
-    }
-    if (!Equal(va,vb,eps)) {
-          std::stringstream os;
-          os << "false because the value of the expressions is not equal  : \n"; 
-          os << astr << " : \n";
-          os << va << "\n";
-          os << bstr << " : \n";
-          os << vb;
-          os << std::endl;
-          return ::testing::AssertionFailure() << os.str();
-    }
-    for (int i=0;i<max(n1,n2);++i) {
-        Quaternion ad = a->derivative(i);
-        Quaternion bd = b->derivative(i);
-        if (c<0) {
-            ad = -ad;
-        }
-        if (debug_output) {
-            std::cout << "      Derivative of Quaternion" << std::endl;
-            std::cout << "      Comparing " << ad;
-            if (c<0) {
-                std::cout << "  (switched sign to take into account double covering of quaterions) ";
-            }
-            std::cout << std::endl;
-            std::cout << "            and " << bd << std::endl;
-        }
-        if (!Equal(ad, bd,eps ) ) {
-              std::stringstream os;
-              os << "false because derivative " << i << " of the expressions is not equal  : \n"; 
-              os << astr << " : \n";
-              os << ad << "\n";
-              os << bstr << " : \n";
-              os << bd;
-              os << std::endl;
-              return ::testing::AssertionFailure() << os.str();
-        }
-    }
-    return ::testing::AssertionSuccess();
-}
-
-
-/**
- * An easy to use test to test the equality of the value of two expression graphs
- */
-#define EXPECT_EQ_EXPR( a, b ) \
-    EXPECT_PRED_FORMAT2(EqualValues, a, b );
-
-
-double NumDiff(double v1, double v2, double dt) {
-    return (v2-v1)/dt; 
-} 
-
-Vector NumDiff(const Vector& v1, const Vector& v2, double dt) {
-    return (v2-v1)/dt; 
-} 
-
-Twist NumDiff(const Twist& v1, const Twist& v2, double dt) {
-    return (v2-v1)/dt; 
-} 
-
-Wrench NumDiff(const Wrench& v1, const Wrench& v2, double dt) {
-    return (v2-v1)/dt; 
-} 
-
-Quaternion NumDiff(const Quaternion& v1, const Quaternion& v2, double dt) {
-    return (v2-v1)/dt; 
-} 
-
-
-// The KDL implementation of diff is not so good any more...
-// my own based upon the quaternion routines.
-
-Vector NumDiff(const Rotation& R1, const Rotation& R2, double dt) {
-    Vector r = 2.0*logUnit( toQuat( R2*R1.Inverse() ) )/dt;
-    return r;
-} 
-
-/** 
- * A predicate format to check the derivative using numerical differentiation:
- * Evaluation is for arbitrary input values, towards all relevant variables.
- *
- */
-template <class T>
-::testing::AssertionResult CheckNumerical(        
-                                               const char* mstr,
-                                               boost::shared_ptr< Expression<T> > m
-                                               ) {
-  double h   = 1E-9;
-  double tol = 1E-4;
-  typedef typename AutoDiffTrait<T>::DerivType Td;
-  // generate arbitrary input for the expression:
-  int n1 = m->number_of_derivatives();
-  std::vector<double> arg(n1);
-  for (int i=0;i<n1;++i) {
-        if (simple_values) {
-            arg[i]=i;
-        } else {
-            random(arg[i]);
-        }
-        m->setInputValue(i,arg[i]);
-  }
-  if (debug_output) {
-         T value = m->value();
-        std::cout << "Checking automatic differentiation and numerical differentiation" << std::endl;
-        std::cout << "expression \n"; m->print(std::cout);
-        std::cout << std::endl;
-        std::cout << "value : " << value << std::endl;
-  }
-  for (int i=0;i<n1;++i) {
-        //  compute numerical derivative towards variable i:
-        m->setInputValue(i, arg[i]-h );
-        T v1 = m->value();
-        m->setInputValue(i, arg[i]+h );
-        T v2 = m->value();
-        Td numdiff = NumDiff(v1,v2,2*h);
-        // automatic differentation:
-        m->setInputValue(i,arg[i]);
-        T value = m->value(); 
-        Td autodiff = m->derivative(i);
-        if (debug_output) {
-            std::cout << "automatic derivarive towards " << i << " : " << numdiff << std::endl;
-            std::cout << "numeric derivarive towards   " << i << " : " << autodiff << std::endl;
-        }
-        if (!Equal(numdiff,autodiff,tol)) {
-            std::stringstream os;
-            os << "check using numerical derivative failed for " << mstr << " : \n";  
-            os << "expression \n"; m->print(os); os << "\n\n";
-            os << "variables : ";
-            for (int j=0;j<n1;++j) {
-                os << j <<":"<<arg[j] <<" ";
-            }
-            os << "\n";
-            os << "value                       : " << value << "\n";
-            os << "derivative towards variable : " << i << "\n";
-            os << "numerical differentiation   : " << numdiff << "\n"; 
-            os << "automatic differentiation   : " << autodiff << "\n"; 
-            return ::testing::AssertionFailure() << os.str();
-        }
-  }
-  if (debug_output) {
-        std::cout << std::endl;
-  }
-  return ::testing::AssertionSuccess();
-}
-
-#define CHECK_WITH_NUM( a ) \
-    EXPECT_PRED_FORMAT1(CheckNumerical, a );
-
-} // namespace KDL.
+#include "test_quat.hpp"
 
 using namespace KDL;
 
@@ -415,15 +21,15 @@ Vector randomVector() {
 
 TEST(QuaternionValues, toRot) {
     Quaternion q1 = normalized(randomQuaternion()); 
-    EXPECT_EQ_QUAT( q1, toQuat(toRot(q1)) );
-    EXPECT_EQ_QUAT( -q1, toQuat(toRot(-q1)) );
+    EXPECT_EQ_UNITQUAT( q1, toQuat(toRot(q1)) );
+    EXPECT_EQ_UNITQUAT( -q1, toQuat(toRot(-q1)) );
 }
 
 TEST(QuaternionValues, comparisonWithMatrices) {
     Quaternion q1 = normalized(randomQuaternion()); 
     Quaternion q2 = normalized(randomQuaternion()); 
-    EXPECT_EQ_QUAT( q1*q2, toQuat(toRot(q1)*toRot(q2)) );
-    EXPECT_EQ_QUAT( Quaternion::Identity(), inv(q1)*q1 );
+    EXPECT_EQ_UNITQUAT( q1*q2, toQuat(toRot(q1)*toRot(q2)) );
+    EXPECT_EQ_UNITQUAT( Quaternion::Identity(), inv(q1)*q1 );
     Vector v = randomVector();
     EXPECT_EQ_VECTOR( apply(q1,v),  toRot(q1)*v );
 }
@@ -449,7 +55,7 @@ TEST(QuaternionValues, rotatingPoints) {
 
 
 TEST(QuaternionValues, testInverse) {
-    Quaternion q1 = normalized(randomQuaternion()); 
+    Quaternion q1 = randomQuaternion(); 
     EXPECT_EQ_QUAT( Quaternion::Identity(), inv(q1)*q1 );
     EXPECT_EQ_QUAT( Quaternion::Identity(), q1*inv(q1) );
     EXPECT_EQ_QUAT( inv(q1), conj(q1)/dot(q1,q1) );
@@ -467,9 +73,9 @@ TEST(QuaternionValues, testExpLog) {
 }
 
 TEST(QuaternionValues, operatorProperties) {
-    Quaternion q1 = normalized(randomQuaternion()); 
-    Quaternion q2 = normalized(randomQuaternion()); 
-    Quaternion q3 = normalized(randomQuaternion()); 
+    Quaternion q1 = randomQuaternion(); 
+    Quaternion q2 = randomQuaternion(); 
+    Quaternion q3 = randomQuaternion(); 
     EXPECT_EQ_QUAT( q1*q2 + q1*q3  ,  q1*(q2+q3) );
     EXPECT_NEAR( dot(q1,q2) + dot(q1,q3)  ,  dot(q1,q2+q3), QUAT_EPS );
     EXPECT_EQ_QUAT( Quaternion::Identity(), inv(q1)*q1 );
@@ -480,9 +86,9 @@ TEST(QuaternionValues, axisAngle) {
     Vector axis;
     double angle;
     axis_angle(q1,axis,angle);
-    EXPECT_EQ_QUAT( q1  ,  toQuat(axis,angle) );
-    EXPECT_EQ_QUAT( q1  ,  toQuat(axis*angle) );
-    EXPECT_EQ_QUAT( q1  ,  exp(axis*angle/2) );
+    EXPECT_EQ_UNITQUAT( q1  ,  toQuat(axis,angle) );
+    EXPECT_EQ_UNITQUAT( q1  ,  toQuat(axis*angle) );
+    EXPECT_EQ_UNITQUAT( q1  ,  exp(axis*angle/2) );
     EXPECT_EQ_VECTOR( axis*angle/2, logUnit(q1) );
     EXPECT_EQ_VECTOR( axis/norm(axis), KDL::axis(q1)/norm(KDL::axis(q1)) );
 }
@@ -491,7 +97,7 @@ TEST(QuaternionValues, norm) {
     Quaternion q1 = randomQuaternion(); 
     Quaternion q2 = randomQuaternion(); 
     q2.w=0;
-    EXPECT_EQ_QUAT( (q2*q2), squarednorm(q2)*Quaternion(1,0,0,0)) ;
+    EXPECT_EQ_QUAT( -(q2*q2), squarednorm(q2)*Quaternion(1,0,0,0)) ;
     EXPECT_EQ_QUAT( squarednorm(q1), norm(q1)*norm(q1) );
     EXPECT_EQ_QUAT( squarednorm(q1), dot(q1,q1) );
 }
@@ -514,86 +120,57 @@ TEST(QuaternionValues, pow) {
     Quaternion q1 = normalized(randomQuaternion()); 
     Quaternion q2 = randomQuaternion(); 
     EXPECT_EQ_QUAT( pow(q2,2), q2*q2 );
-    EXPECT_EQ_QUAT( powUnit(q1,2), q1*q1 );
+    EXPECT_EQ_UNITQUAT( powUnit(q1,2), q1*q1 );
     EXPECT_EQ_QUAT( pow(q2,3), q2*q2*q2 );
-    EXPECT_EQ_QUAT( powUnit(q1,3), q1*q1*q1 );
+    EXPECT_EQ_UNITQUAT( powUnit(q1,3), q1*q1*q1 );
     EXPECT_EQ_QUAT( pow(q2,-2), inv(q2*q2) );
-    EXPECT_EQ_QUAT( powUnit(q1,3), q1*q1*q1 );
+    EXPECT_EQ_UNITQUAT( powUnit(q1,3), q1*q1*q1 );
 }
 
-TEST(QuaternionValues, diff) {
+TEST(QuaternionValues, diffUnit) {
     Vector a(1,2,3);
     a.Normalize();
     Quaternion q1 = toQuat( a, 20.0/180.0*PI); 
     Quaternion q2 = toQuat( a, 190.0/180.0*PI); 
-    Vector d = diff(q1,q2);
+    Vector d = diffUnit(q1,q2);
     EXPECT_EQ_VECTOR( d, a*170.0/180.0*PI);
 }
 
 
-
 TEST(QuaternionCompareValueExpr,exp) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( exp(q1)->value(), exp(q1->value()) );
 } 
 
 TEST(QuaternionCompareValueExpr,log) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( log(q1)->value(), log(q1->value()) );
 } 
 
 TEST(QuaternionCompareValueExpr,logUnit) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized(random<Quaternion>(ndx));
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
     EXPECT_EQ_VECTOR( logUnit(q1)->value(), logUnit(q1->value()) );
 } 
 
 TEST(QuaternionCompareValueExpr,toRot) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized(random<Quaternion>(ndx));
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
     EXPECT_EQ( toRot(q1)->value(), toRot(q1->value()) );
 } 
 
 TEST(QuaternionCompareValueExpr,toQuat) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized(random<Quaternion>(ndx));
-    EXPECT_EQ_QUAT( toQuat(toRot(q1))->value(), toQuat(toRot(q1->value())) );
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
+    EXPECT_EQ_UNITQUAT( toQuat(toRot(q1))->value(), toQuat(toRot(q1->value())) );
 } 
 
 TEST(QuaternionCompareValueExpr,apply) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized(random<Quaternion>(ndx));
-    std::vector<int> ndx2; 
-    ndx2.push_back(5);
-    ndx2.push_back(6);
-    ndx2.push_back(3);
-    Expression<Vector>::Ptr v = normalized(random<Vector>(ndx2));
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
+    Expression<Vector>::Ptr v = normalized(testvar<Vector>(ndx));
     Vector v1 = apply(q1,v)->value();
     Vector v2 = apply(q1->value(), v->value() );
     EXPECT_EQ_VECTOR( v1, v2);
@@ -601,48 +178,27 @@ TEST(QuaternionCompareValueExpr,apply) {
 } 
 
 TEST(QuaternionCompareValueExpr,normOps) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( (q1/norm(q1))->value(), q1->value() / norm( q1->value() ) );
     EXPECT_EQ_QUAT( squarednorm(q1)->value(), squarednorm(q1->value()) );
     EXPECT_EQ_QUAT( norm(q1)->value(), norm(q1->value()) );
     EXPECT_EQ_QUAT( dot(q1,q1)->value(), dot(q1->value(),q1->value()) );
 } 
 TEST(QuaternionCompareValueExpr,inverse) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( inv(q1)->value(), inv(q1->value()) );
 } 
 TEST(QuaternionCompareValueExpr,pow) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( pow(q1, Constant(2.0))->value(), q1->value()*q1->value() );
 } 
 TEST(QuaternionCompareValueExpr,operators) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    std::vector<int> ndx2; 
-    ndx2.push_back(5);
-    ndx2.push_back(6);
-    ndx2.push_back(7);
-    ndx2.push_back(8);
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx2);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
  
     EXPECT_EQ_QUAT( (q1*q2)->value(), q1->value() * q2->value() );
     EXPECT_EQ_QUAT( (q1+q2)->value(), q1->value() + q2->value() );
@@ -665,22 +221,22 @@ TEST(QuaternionCompareValueExpr,axis) {
     EXPECT_EQ( a->value(), axis*angle  );
 } 
 */
+TEST(QuaternionCompareValueExpr,diffUnit) {
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
+    Expression<Quaternion>::Ptr q2 = normalized(testvar<Quaternion>(ndx));
+ 
+    EXPECT_EQ( (diffUnit(q1,q2))->value(), diffUnit(q1->value() , q2->value()) );
+} 
+/*
 TEST(QuaternionCompareValueExpr,diff) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    std::vector<int> ndx2; 
-    ndx2.push_back(5);
-    ndx2.push_back(6);
-    ndx2.push_back(7);
-    ndx2.push_back(8);
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx2);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
  
     EXPECT_EQ( (diff(q1,q2))->value(), diff(q1->value() , q2->value()) );
 } 
+*/
 
 TEST(DoubleNumDiff, Scalars) {
         int ndx=1;
@@ -711,43 +267,6 @@ TEST(QuaternionNumDiff,operators) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
-/*    Quaternion q1v(3,2,1,0);
-    Quaternion q2v(7,6,5,4);
-    Quaternion dq1v(0,0,0,0);
-    Quaternion dq2v(0,0,0,1);
-    std::cout << "q1 : " << q1v << std::endl; 
-    std::cout << "q2 : " << q2v << std::endl; 
-    std::cout << "q1*q2 : " << q1v * q2v << std::endl;
-    std::cout << "dq1*q2 + q1*dq2 : " << dq1v*q2v + q1v*dq2v << std::endl;
-
-    Expression<Quaternion>::Ptr qr = q1*q2;
-    qr->setInputValue(0,0.0);
-    qr->setInputValue(1,1.0);
-    qr->setInputValue(2,2.0);
-    qr->setInputValue(3,3.0);
-    qr->setInputValue(4,4.0);
-    qr->setInputValue(5,5.0);
-    qr->setInputValue(6,6.0);
-    qr->setInputValue(7,7.0);
-    std::cout << "q1*q2 expr value: " << qr->value() << std::endl;
-    std::cout << "q1*q2 expr derivative 0: " << qr->derivative(0) << std::endl;
-    std::cout << "q1*q2 expr derivative 1: " << qr->derivative(1) << std::endl;
-    std::cout << "q1*q2 expr derivative 2: " << qr->derivative(2) << std::endl;
-    std::cout << "q1*q2 expr derivative 3: " << qr->derivative(3) << std::endl;
-    std::cout << "q1*q2 expr derivative 4: " << qr->derivative(4) << std::endl;
-    std::cout << "q1*q2 expr derivative 5: " << qr->derivative(5) << std::endl;
-    std::cout << "q1*q2 expr derivative 6: " << qr->derivative(6) << std::endl;
-    std::cout << "q1*q2 expr derivative 7: " << qr->derivative(7) << std::endl;
-    double h=1E-9;
-    double v=4.0;
-    qr->setInputValue(4,v+h);
-    Quaternion v1 = qr->value();
-    std::cout << "q1*q2 numdiff expr v+h " << v1 << std::endl;
-    qr->setInputValue(4,v-h);
-    Quaternion v2 = qr->value();
-    std::cout << "q1*q2 numdiff expr v-h " << v2 << std::endl;
-    std::cout << "q1*q2 numdiff expr " << (v2-v1)/2.0/h << std::endl;
-    */
     CHECK_WITH_NUM( q1 );
     CHECK_WITH_NUM( q2 );
     CHECK_WITH_NUM( -q1 );
@@ -833,12 +352,21 @@ TEST(QuaternionNumDiff, apply) {
     CHECK_WITH_NUM(q1*v*conj(q1));
 }
 
-TEST(QuaternionNumDiff, diff) {
+TEST(QuaternionNumDiff, diffUnit) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
     Expression<Quaternion>::Ptr q2 = normalized(testvar<Quaternion>(ndx));
+    CHECK_WITH_NUM(diffUnit(q1, q2));
+}
+/*
+TEST(QuaternionNumDiff, diff) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
     CHECK_WITH_NUM(diff(q1, q2));
 }
+*/
+
 TEST(QuaternionNumDiff, toQuat2) {
     int ndx=0;
     Expression<Vector>::Ptr omega = testvar<Vector>(ndx);
@@ -918,16 +446,6 @@ TEST(DoubleExpr, transcendental_functions) {
 }
 
 TEST(QuaternionExpr, mult_sum) {
-    /*
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx);
-    Expression<Quaternion>::Ptr q3 = random<Quaternion>(ndx);
-    */
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
@@ -942,13 +460,9 @@ TEST(QuaternionExpr, mult_sum) {
 
 
 TEST(QuaternionExpr, normOps) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx);
+    int ndx = 0; 
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
     EXPECT_EQ_EXPR( normalized(q1) , q1 / norm(q1) );
     EXPECT_EQ_EXPR( squarednorm(q1), dot(q1,q1 ));
     EXPECT_EQ_EXPR( squarednorm(q1), norm(q1)*norm(q1) );
@@ -957,47 +471,27 @@ TEST(QuaternionExpr, normOps) {
 }
 
 TEST(QuaternionExpr, toRot) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
-    EXPECT_EQ_EXPR( q1, toQuat(toRot(q1)) );
-    EXPECT_EQ_EXPR( -q1, -toQuat(toRot(q1)) );
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
+    EXPECT_EQ_UNITQUAT_EXPR( q1, toQuat(toRot(q1)) );
+    EXPECT_EQ_UNITQUAT_EXPR( -q1, -toQuat(toRot(q1)) );
 }
 
 TEST(QuaternionExpr, comparisonWithMatrices) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
-    Expression<Quaternion>::Ptr q2 = normalized( random<Quaternion>(ndx) );
-    std::vector<int> ndx2; 
-    ndx2.push_back(5);
-    ndx2.push_back(6);
-    ndx2.push_back(2);
-    Expression<Vector>::Ptr      p = random<Vector>(ndx2);
+    int ndx = 1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Quaternion>::Ptr q2 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Vector>::Ptr      p = testvar<Vector>(ndx);
     EXPECT_EQ_EXPR( apply(q1,p), toRot(q1)*p );
-    EXPECT_EQ_EXPR( q1*q2, toQuat( toRot(q1) * toRot(q2) ) );
-    EXPECT_EQ_EXPR( Constant<Quaternion>(Quaternion::Identity()), inv(q1)*q1 );
+    EXPECT_EQ_UNITQUAT_EXPR( q1*q2, toQuat( toRot(q1) * toRot(q2) ) );
+    EXPECT_EQ_UNITQUAT_EXPR( Constant<Quaternion>(Quaternion::Identity()), inv(q1)*q1 );
     EXPECT_EQ_EXPR( Constant<Rotation>(Rotation::Identity()), toRot(inv(q1))*toRot(q1) );
 }
 
 TEST(QuaternionExpr, rotatingPoints) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
-    std::vector<int> ndx2; 
-    ndx2.push_back(5);
-    ndx2.push_back(6);
-    ndx2.push_back(2);
-    Expression<Vector>::Ptr      v = random<Vector>(ndx2);
+    int ndx = 1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Vector>::Ptr      v = testvar<Vector>(ndx);
  
     EXPECT_EQ_EXPR( apply(q1,v),  vec(q1*(v*inv(q1))) );
     EXPECT_EQ_EXPR( apply(q1,v),  vec(q1*(v*inv(q1))) );
@@ -1009,41 +503,31 @@ TEST(QuaternionExpr, rotatingPoints) {
 
 
 TEST(QuaternionExpr, testInverse) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
+    int ndx = 1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
     EXPECT_EQ_EXPR( Constant(Quaternion::Identity()), inv(q1)*q1 );
     EXPECT_EQ_EXPR( Constant(Quaternion::Identity()), q1*inv(q1) );
     EXPECT_EQ_EXPR( inv(q1), conj(q1)/dot(q1,q1) );
 }
 
 TEST(QuaternionExpr, testExpLog) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
-    Expression<Quaternion>::Ptr q2 = quaternion(Constant(0.0),normalized( random<Vector>(ndx) ));
+    int ndx = 1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Quaternion>::Ptr q2 = quaternion(Constant(0.0),normalized( testvar<Vector>(ndx) ));
     EXPECT_EQ_EXPR( q1, exp(log(q1)) );
     EXPECT_EQ_EXPR( q1, exp(logUnit(q1)) );
+    EXPECT_EQ_EXPR( -q1, exp(logUnit(-q1)) );
+    EXPECT_EQ_UNITQUAT_EXPR( q1, exp(logUnit(-q1)) );
     EXPECT_EQ_EXPR( vec(q2), logUnit(exp(q2)) );
     EXPECT_EQ_EXPR( q2, log(exp(q2)) );
     EXPECT_EQ_EXPR( q2*exp(q2), exp(q2)*q2 );
 }
 
 TEST(QuaternionExpr, operatorProperties) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized( random<Quaternion>(ndx) );
-    Expression<Quaternion>::Ptr q2 = normalized( random<Quaternion>(ndx) );
-    Expression<Quaternion>::Ptr q3 = normalized( random<Quaternion>(ndx) );
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Quaternion>::Ptr q2 = normalized( testvar<Quaternion>(ndx) );
+    Expression<Quaternion>::Ptr q3 = normalized( testvar<Quaternion>(ndx) );
  
     EXPECT_EQ_EXPR( q1*q2 + q1*q3  ,  q1*(q2+q3) );
     EXPECT_EQ_EXPR( dot(q1,q2) + dot(q1,q3)  ,  dot(q1,q2+q3) );
@@ -1053,26 +537,18 @@ TEST(QuaternionExpr, operatorProperties) {
 
 
 TEST(QuaternionExpr, mult_keeps_norm) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
  
     EXPECT_EQ_EXPR( norm(q1*q2) ,  norm(q1)*norm(q2) );
 }
 
 
 TEST(QuaternionExpr, pow) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    ndx.push_back(4);
-    Expression<Quaternion>::Ptr q1 = normalized(random<Quaternion>(ndx));
-    Expression<Quaternion>::Ptr q2 = random<Quaternion>(ndx);
+    int ndx=1;
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
  
     EXPECT_EQ_EXPR( exp(log(q2)*Constant(2.0)), q2*q2 );
     EXPECT_EQ_EXPR( pow(q2,Constant(2.0)), q2*q2 );
@@ -1084,14 +560,11 @@ TEST(QuaternionExpr, pow) {
 }
 
 TEST(QuaternionExpr, diff) {
-    std::vector<int> ndx; 
-    ndx.push_back(1);
-    ndx.push_back(2);
-    ndx.push_back(3);
-    Expression<Vector>::Ptr a = normalized(random<Vector>(ndx));
+    int ndx=1;
+    Expression<Vector>::Ptr a = normalized(testvar<Vector>(ndx));
     Expression<Quaternion>::Ptr q1 = toQuat( a, Constant(20.0/180.0*PI)); 
     Expression<Quaternion>::Ptr q2 = toQuat( a, Constant(190.0/180.0*PI)); 
-    Expression<Vector>::Ptr d = diff(q1,q2);
+    Expression<Vector>::Ptr d = diffUnit(q1,q2);
     EXPECT_EQ_EXPR( d, a*Constant(170.0/180.0*PI));
 }
 

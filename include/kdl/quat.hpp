@@ -306,7 +306,7 @@ namespace KDL {
     /**
      * The rotational velocity vector to go from q1 to q2 in one unit of time.
      */ 
-    inline Vector diff( const Quaternion& q1, const Quaternion& q2 ) {
+    inline Vector diffUnit( const Quaternion& q1, const Quaternion& q2 ) {
         double c = dot(q1, q2);
         if (c < 0.0) {
             return logUnit(-q2*conj(q1) )*2.0;
@@ -314,7 +314,7 @@ namespace KDL {
             return logUnit(q2*conj(q1) )*2.0;
         }
     }
-    inline Vector diff( const Quaternion& q1, const Quaternion& q2, double dt ) {
+    inline Vector diffUnit( const Quaternion& q1, const Quaternion& q2, double dt ) {
         double c = dot(q1, q2);
         if (c < 0.0) {
             return logUnit(-q2*conj(q1) )*2.0/dt;
@@ -322,6 +322,14 @@ namespace KDL {
             return logUnit(q2*conj(q1) )*2.0/dt;
         }
     }
+/*
+    inline Quaternion diff( const Quaternion& q1, const Quaternion& q2 ) {
+        return (q2-q1);
+    }
+    inline Quaternion diff( const Quaternion& q1, const Quaternion& q2, double dt ) {
+        return (q2-q1)/dt;
+    }
+*/
 
 
 
