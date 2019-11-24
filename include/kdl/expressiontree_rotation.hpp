@@ -618,7 +618,12 @@ inline Expression<KDL::Vector>::Ptr getRPY( Expression<KDL::Rotation>::Ptr a) {
     return expr;
 }
 
-
+    // just because the analog exists for rotation matrices, we define it
+    // also for rotation matrices:
+    inline Expression<Vector>::Ptr apply ( 
+            Expression<Rotation>::Ptr F, Expression<Vector>::Ptr v) {
+        return F*v; 
+    }
 
 } // end of namespace KDL
 #endif

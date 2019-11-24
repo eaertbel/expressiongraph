@@ -354,5 +354,12 @@ inline Expression<KDL::Rotation>::Ptr rotation( Expression<KDL::Frame>::Ptr a) {
     return expr;
 }
 
+// just because the analog exists for rotation matrices, we define it
+// also for rotation matrices:
+inline Expression<Vector>::Ptr apply ( 
+        Expression<Frame>::Ptr F, Expression<Vector>::Ptr v) {
+    return F*v; 
+}
+
 }; // namespace KDL
 #endif
