@@ -124,7 +124,7 @@ class MotionProfileTrapezoidalOutput : public MIMO_Output<double> {
  * After this, you can call get_output_profile(...) to get an expression for the different outputs you had
  * defined.      
  */
-MotionProfileTrapezoidal::Ptr create_motionprofile_trapezoidal() {
+inline MotionProfileTrapezoidal::Ptr create_motionprofile_trapezoidal() {
     return boost::make_shared< MotionProfileTrapezoidal>();
 }
 
@@ -132,14 +132,14 @@ MotionProfileTrapezoidal::Ptr create_motionprofile_trapezoidal() {
  * \brief gets an expression representing the motion profile for a given output
  * \param idx index of the output for which the expression is returned.
  */
-Expression<double>::Ptr get_output_profile(MotionProfileTrapezoidal::Ptr& m,int output) {
+inline Expression<double>::Ptr get_output_profile(MotionProfileTrapezoidal::Ptr& m,int output) {
     return boost::make_shared<MotionProfileTrapezoidalOutput>( m,output);
 }
 
 /**
  * \brief gets an expression representing the duration 
  */
-Expression<double>::Ptr get_duration(MotionProfileTrapezoidal::Ptr& m) {
+inline Expression<double>::Ptr get_duration(MotionProfileTrapezoidal::Ptr& m) {
     return boost::make_shared<MotionProfileTrapezoidalOutput>( m,-1);
 }
 
