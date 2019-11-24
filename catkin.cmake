@@ -26,6 +26,7 @@ FILE( GLOB EXPRESSIONTREE_SRCS src/[^.]*.cpp src/[^.]*.cxx)
 
 set(EXPRESSIONTREE_SRCS
     src/expressiontree_expressions.cpp  
+    src/expressiontree_quaternion.cpp  
     src/expressiontree_motionprofiles.cpp    
     src/expressiontree_rotation.cpp  
     src/expressiontree_wrench.cpp
