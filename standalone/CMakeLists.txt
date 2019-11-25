@@ -287,9 +287,9 @@ endif()
 
 # Now simply link against gtest or gtest_main as needed. Eg
 #add_executable(expressiongraph_test ../tests/expressiongraph_test.cpp )
-add_executable(test_quat ../tests/test_quat.cpp )
+add_executable(test_expressiongraph ../tests/test_expressiongraph.cpp )
 #target_link_libraries(expressiongraph_test gtest_main ${PROJECT_NAME} ${Eigen_LIBRARIES})
-target_link_libraries(test_quat gtest_main ${PROJECT_NAME} ${Eigen_LIBRARIES})
-gtest_discover_tests(test_quat)
+target_link_libraries(test_expressiongraph gtest_main ${PROJECT_NAME} ${Eigen_LIBRARIES})
+gtest_discover_tests(test_expressiongraph)
 #add_test(NAME quat_test COMMAND quat_test)
 

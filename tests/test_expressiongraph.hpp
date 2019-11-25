@@ -1,5 +1,5 @@
-#ifndef EXPRESSIONGRAPH_TEST_QUAT_HPP
-#define EXPRESSIONGRAPH_TEST_QUAT_HPP
+#ifndef EXPRESSIONGRAPH_TEST_EXPRESSIONGRAPH_HPP
+#define EXPRESSIONGRAPH_TEST_EXPRESSIONGRAPH_HPP
 
 #include <kdl/expressiontree_quaternion.hpp>
 #include <kdl/expressiontree.hpp>
@@ -90,6 +90,26 @@ template<> Expression<Wrench>::Ptr testvar<Wrench>(int& ndx) {
 
 template<> Expression<Quaternion>::Ptr testvar<Quaternion>(int& ndx) {
     return quaternion( testvar<double>(ndx), testvar<Vector>(ndx) );
+}
+
+
+template <class T>
+void setArbitraryInput(typename Expression<T>::Ptr e) {
+    typedef std::set<int> Set;
+    Set scalardep;
+    Set rotdep;
+    e->getScalarDependencies(scalardep);
+    for (Set::iterator it=scalardep.begin();it!=scalardep.end();++it) {
+        double arg;
+        random(arg);
+        e->setInputValue(*it, arg);
+    }
+    e->getRotDependencies(rotdep);
+    for (Set::iterator it=rotdep.begin();it!=rotdep.end();++it) {
+        Rotation arg;
+        random(arg);
+        e->setInputValue(*it, arg);
+    }
 }
 
 
@@ -356,6 +376,11 @@ Vector NumDiff(const Rotation& R1, const Rotation& R2, double dt) {
     return r;
 } 
 
+Twist NumDiff(const Frame& F1, const Frame& F2, double dt) {
+    //Vector r = 2.0*logUnit( toQuat( R2*R1.Inverse() ) )/dt;
+    return Twist( NumDiff(F1.p,F2.p,dt), NumDiff(F1.M,F2.M,dt));
+} 
+
 /** 
  * A predicate format to check the derivative using numerical differentiation:
  * Evaluation is for arbitrary input values, towards all relevant variables.
@@ -380,12 +405,27 @@ template <class T>
         }
         m->setInputValue(i,arg[i]);
   }
+  T value = m->value();
+  T value_cloned = (m->clone())->value();
   if (debug_output) {
-         T value = m->value();
         std::cout << "Checking automatic differentiation and numerical differentiation" << std::endl;
         std::cout << "expression \n"; m->print(std::cout);
         std::cout << std::endl;
-        std::cout << "value : " << value << std::endl;
+        std::cout << "value                      : " << value << std::endl;
+        std::cout << "value of cloned expression : " << value_cloned << std::endl;
+  }
+  if (!Equal(value, value_cloned,tol)) {
+        std::stringstream os;
+        os << "check value of cloned expression failed for " << mstr << " : \n";  
+        os << "expression \n"; m->print(os); os << "\n\n";
+        os << "variables : ";
+        for (int j=0;j<n1;++j) {
+            os << j <<":"<<arg[j] <<" ";
+        }
+        os << "\n";
+        os << "value                       : " << value << "\n";
+        os << "value  of cloned expression : " << value_cloned << "\n";
+        return ::testing::AssertionFailure() << os.str();
   }
   for (int i=0;i<n1;++i) {
         //  compute numerical derivative towards variable i:

@@ -1,4 +1,4 @@
-#include "test_quat.hpp"
+#include "test_expressiongraph.hpp"
 
 using namespace KDL;
 
@@ -616,192 +616,279 @@ TEST(QuaternionExpr, diff) {
 
 
 
-/*
-TEST(QuaternionDeriv, conj_inv) {
-        std::vector<int> ndx; 
-        ndx.push_back(1);
-        ndx.push_back(2);
-        ndx.push_back(3);
-        ndx.push_back(4);
-        Expression<Quaternion>::Ptr q1 = random<Quaternion>(ndx);
-    
-        CHECK_WITH_NUM( conj(q1) );
-}*/
 
-
-/**        
 TEST(ExpressionTree, Vector) {
-        std::vector<int> ndx; 
-        ndx.push_back(1);ndx.push_back(2);ndx.push_back(3);
-        Expression<Vector>::Ptr a = random<Vector>(ndx);
-        Expression<Vector>::Ptr b = random<Vector>(ndx);
-        Expression<double>::Ptr s = random<double>(ndx);
+        int ndx=0;
+        Expression<Vector>::Ptr a = testvar<Vector>(ndx);
+        Expression<Vector>::Ptr b = testvar<Vector>(ndx);
+        Expression<double>::Ptr s = testvar<double>(ndx);
  
-        CHECK_ROT_WITH_NUM( -a );
-        CHECK_ROT_WITH_NUM( dot(a,b) );
-        CHECK_ROT_WITH_NUM( a*b );
-        CHECK_ROT_WITH_NUM( a-b );
-        CHECK_ROT_WITH_NUM( a+b );
-        CHECK_ROT_WITH_NUM( norm(a) );
-        CHECK_ROT_WITH_NUM( squared_norm(a) );
-        CHECK_ROT_WITH_NUM( a*s );
-        CHECK_ROT_WITH_NUM( s*a );
-        CHECK_ROT_WITH_NUM( coord_x(a) );
-        CHECK_ROT_WITH_NUM( coord_y(a) );
-        CHECK_ROT_WITH_NUM( coord_z(a) );
-        CHECK_ROT_WITH_NUM( diff(a,b) );
+        CHECK_WITH_NUM( -a );
+        CHECK_WITH_NUM( dot(a,b) );
+        CHECK_WITH_NUM( a*b );
+        CHECK_WITH_NUM( a-b );
+        CHECK_WITH_NUM( a+b );
+        CHECK_WITH_NUM( norm(a) );
+        CHECK_WITH_NUM( squared_norm(a) );
+        CHECK_WITH_NUM( a*s );
+        CHECK_WITH_NUM( s*a );
+        CHECK_WITH_NUM( coord_x(a) );
+        CHECK_WITH_NUM( coord_y(a) );
+        CHECK_WITH_NUM( coord_z(a) );
+        CHECK_WITH_NUM( diff(a,b) );
  
         EXPECT_EQ_EXPR( a*b, -b*a );
-        EXPECT_EQ_VALUES( dot(a,b), dot(b,a) );
-        EXPECT_EQ_VALUES( a+b, b+a );
-        EXPECT_EQ_VALUES( a-b, -(b-a) );
-        EXPECT_EQ_VALUES( a*s, s*a );
-        //EXPECT_EQ_VALUES( sqr(a), a*a );
-        EXPECT_EQ_VALUES( squared_norm(a), dot(a,a) );
-        EXPECT_EQ_VALUES( diff(a,b), -diff(b,a) );
-        EXPECT_EQ_VALUES( a + Constant(Vector::Zero()), a );
+        EXPECT_EQ_EXPR( dot(a,b), dot(b,a) );
+        EXPECT_EQ_EXPR( a+b, b+a );
+        EXPECT_EQ_EXPR( a-b, -(b-a) );
+        EXPECT_EQ_EXPR( a*s, s*a );
+        //EXPECT_EQ_EXPR( sqr(a), a*a );
+        EXPECT_EQ_EXPR( squared_norm(a), dot(a,a) );
+        EXPECT_EQ_EXPR( diff(a,b), -diff(b,a) );
+        EXPECT_EQ_EXPR( a + Constant(Vector::Zero()), a );
 
 }
 
 TEST(ExpressionTree, Rotation) {
-        // declare random variables to be used:
-        std::vector<int> ndx; 
-        ndx.push_back(1);
-        ndx.push_back(2);ndx.push_back(3);
-        Expression<Rotation>::Ptr a = random<Rotation>(ndx);
-        Expression<Rotation>::Ptr b = random<Rotation>(ndx);
+        int ndx=1;
+        Expression<Rotation>::Ptr a = testvar<Rotation>(ndx);
+        Expression<Rotation>::Ptr b = testvar<Rotation>(ndx);
         Expression<Rotation>::Ptr I = Constant( Rotation::Identity() );
-        Expression<Vector>::Ptr   v = random<Vector>(ndx);
-        Expression<double>::Ptr   s = random<double>(ndx);
-        Vector axis(1,2,3);
-        random(axis);
-
         
-        CHECK_ROT_WITH_NUM( rot(axis,s) );
-        CHECK_ROT_WITH_NUM( rot_x(s) );
-        CHECK_ROT_WITH_NUM( rot_y(s) );
-        CHECK_ROT_WITH_NUM( rot_z(s) );
-        CHECK_ROT_WITH_NUM( inv(a) );
-        CHECK_ROT_WITH_NUM( a*b );
-        CHECK_ROT_WITH_NUM( a*v );
-        CHECK_ROT_WITH_NUM( unit_x(a) );
-        CHECK_ROT_WITH_NUM( unit_y(a) );
-        CHECK_ROT_WITH_NUM( unit_z(a) );
+        CHECK_WITH_NUM( inv(a) );
+        CHECK_WITH_NUM( a*b );
         
-        EXPECT_EQ_VALUES( a*I, I*a );
-        EXPECT_EQ_VALUES( a*inv(a), inv(a)*a );
-        EXPECT_EQ_VALUES( a*inv(a), I );
-        EXPECT_EQ_VALUES( (a*b)*v, a*(b*v) );
-        EXPECT_EQ_VALUES( rot_x(s), rot(Vector(1,0,0),s) );
-        EXPECT_EQ_VALUES( rot_y(s), rot(Vector(0,1,0),s) );
-        EXPECT_EQ_VALUES( rot_z(s), rot(Vector(0,0,1),s) );
+        EXPECT_EQ_EXPR( a*I, I*a );
+        EXPECT_EQ_EXPR( a*inv(a), inv(a)*a );
+        EXPECT_EQ_EXPR( a*inv(a), I );
 }
 
+
+TEST(ExpressionTree, Rotation_and_vector) {
+        int ndx=1;
+        Expression<Rotation>::Ptr a = testvar<Rotation>(ndx);
+        Expression<Vector>::Ptr   v = testvar<Vector>(ndx);
+        
+        CHECK_WITH_NUM( a*v );
+        CHECK_WITH_NUM( unit_x(a) );
+        CHECK_WITH_NUM( unit_y(a) );
+        CHECK_WITH_NUM( unit_z(a) );
+        
+}
+
+TEST(ExpressionTree, Rotation_rot_function) {
+        int ndx=1;
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+        Vector axis(1,2,3);
+        random(axis);
+        
+        CHECK_WITH_NUM( rot(axis,s) );
+        CHECK_WITH_NUM( rot_x(s) );
+        CHECK_WITH_NUM( rot_y(s) );
+        CHECK_WITH_NUM( rot_z(s) );
+
+        EXPECT_EQ_EXPR( rot_x(s), rot(Vector(1,0,0),s) );
+        EXPECT_EQ_EXPR( rot_y(s), rot(Vector(0,1,0),s) );
+        EXPECT_EQ_EXPR( rot_z(s), rot(Vector(0,0,1),s) );
+}
+
+
+
 TEST(ExpressionTree, Frame) {
-        // declare random variables to be used:
-        std::vector<int> ndx; 
-        ndx.push_back(0);
-        ndx.push_back(1);ndx.push_back(2);
-        Expression<Frame>::Ptr a = random<Frame>(ndx);
-        Expression<Frame>::Ptr b = random<Frame>(ndx);
+        int ndx=1;
+        Expression<Frame>::Ptr a = testvar<Frame>(ndx);
+        Expression<Frame>::Ptr b = testvar<Frame>(ndx);
         Expression<Frame>::Ptr I = Constant( Frame::Identity() );
-        Expression<Rotation>::Ptr R = random<Rotation>(ndx);
-        Expression<Vector>::Ptr   v = random<Vector>(ndx);
-        Expression<double>::Ptr   s = random<double>(ndx);
+        
+        CHECK_WITH_NUM( inv(a) );
+        CHECK_WITH_NUM( a*b );
+
+        EXPECT_EQ_EXPR( a*I, I*a );
+        EXPECT_EQ_EXPR( a*inv(a), inv(a)*a );
+        EXPECT_EQ_EXPR( a*inv(a), I );
+}
+
+TEST(ExpressionTree, Frame_vector) {
+        int ndx=1;
+        Expression<Frame>::Ptr    a = testvar<Frame>(ndx);
+        Expression<Vector>::Ptr   v = testvar<Vector>(ndx);
 
         
-        CHECK_ROT_WITH_NUM( frame(R,v) );
-        CHECK_ROT_WITH_NUM( frame(R) );
-        CHECK_ROT_WITH_NUM( frame(v) );
-        CHECK_ROT_WITH_NUM( inv(a) );
-        CHECK_ROT_WITH_NUM( a*b );
-        CHECK_ROT_WITH_NUM( a*v );
-        CHECK_ROT_WITH_NUM( origin(a) );
-        CHECK_ROT_WITH_NUM( rotation(a) );
+        CHECK_WITH_NUM( frame(rotation(a),v) );
+        CHECK_WITH_NUM( a*v );
+        CHECK_WITH_NUM( frame(rotation(a) ));
+        CHECK_WITH_NUM( frame(v) );
+        CHECK_WITH_NUM( origin(a) );
+        CHECK_WITH_NUM( rotation(a) );
 
-        EXPECT_EQ_VALUES( a*I, I*a );
-        EXPECT_EQ_VALUES( a*inv(a), inv(a)*a );
-        EXPECT_EQ_VALUES( a*inv(a), I );
-        EXPECT_EQ_VALUES( (a*b)*v, a*(b*v) );
+        EXPECT_EQ_EXPR( v, (inv(a)*a)*v );
+        EXPECT_EQ_EXPR( v, inv(a)*(a*v) );
 }
 
 TEST(ExpressionTree, Twist) {
-        // declare random variables to be used:
-        std::vector<int> ndx; 
-        ndx.push_back(1);
-        //ndx.push_back(2);ndx.push_back(3);
-        Expression<Twist>::Ptr a = random<Twist>(ndx);
-        Expression<Twist>::Ptr b = random<Twist>(ndx);
+        int ndx=1;
+        Expression<Twist>::Ptr a = testvar<Twist>(ndx);
         Expression<Twist>::Ptr Z = Constant( Twist::Zero() );
-        Expression<Frame>::Ptr F1 = random<Frame>(ndx);
-        Expression<Frame>::Ptr F2 = random<Frame>(ndx);
-        Expression<Rotation>::Ptr R1 = random<Rotation>(ndx);
-        Expression<Rotation>::Ptr R2 = random<Rotation>(ndx);
-        Expression<Vector>::Ptr   v1 = random<Vector>(ndx);
-        Expression<Vector>::Ptr   v2 = random<Vector>(ndx);
-        Expression<double>::Ptr   s = random<double>(ndx);
+        Expression<Rotation>::Ptr R1 = testvar<Rotation>(ndx);
+        Expression<Rotation>::Ptr R2 = testvar<Rotation>(ndx);
 
         
-        CHECK_ROT_WITH_NUM( twist(v1,v2) );
-        CHECK_ROT_WITH_NUM( transvel(a) );
-        CHECK_ROT_WITH_NUM( rotvel(a) );
-        CHECK_ROT_WITH_NUM( a+b );
-        CHECK_ROT_WITH_NUM( a-b );
-        CHECK_ROT_WITH_NUM( R1*a );
-        CHECK_ROT_WITH_NUM( s*a );
-        CHECK_ROT_WITH_NUM( a*s );
-        CHECK_ROT_WITH_NUM( ref_point(a,v1) );
+        CHECK_WITH_NUM( R1*a );
 
-        EXPECT_EQ_VALUES( (R1*R2)*a, R1*(R2*a) );
-        EXPECT_EQ_VALUES( a-b, -(b-a) );
-        EXPECT_EQ_VALUES( a+a, Constant(2.0)*a );
-        EXPECT_EQ_VALUES( a-a, Z );
-        EXPECT_EQ_VALUES( a+Z, a );
-        EXPECT_EQ_VALUES( Z+a, a );
-        EXPECT_EQ_VALUES( transvel(twist(v1,v2)), v1 );
-        EXPECT_EQ_VALUES( rotvel(twist(v1,v2)), v2 );
+        EXPECT_EQ_EXPR( (R1*R2)*a, R1*(R2*a) );
 }
+
+TEST(ExpressionTree, TwistScalarOp) {
+        int ndx=1;
+        Expression<Twist>::Ptr a = testvar<Twist>(ndx);
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+
+        
+        CHECK_WITH_NUM( s*a );
+        CHECK_WITH_NUM( a*s );
+}
+
+
+
+TEST(ExpressionTree, TwistOp) {
+        int ndx=1;
+        Expression<Twist>::Ptr a = testvar<Twist>(ndx);
+        Expression<Twist>::Ptr b = testvar<Twist>(ndx);
+        Expression<Twist>::Ptr Z = Constant( Twist::Zero() );
+
+        
+        CHECK_WITH_NUM( a+b );
+        CHECK_WITH_NUM( a-b );
+
+        EXPECT_EQ_EXPR( a-b, -(b-a) );
+        EXPECT_EQ_EXPR( a+a, Constant(2.0)*a );
+        EXPECT_EQ_EXPR( a-a, Z );
+        EXPECT_EQ_EXPR( a+Z, a );
+        EXPECT_EQ_EXPR( Z+a, a );
+}
+
+TEST(ExpressionTree, TwistSelectors) {
+        int ndx=1;
+        Expression<Twist>::Ptr a = testvar<Twist>(ndx);
+        Expression<Vector>::Ptr   v1 = testvar<Vector>(ndx);
+        Expression<Vector>::Ptr   v2 = testvar<Vector>(ndx);
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+
+        
+        CHECK_WITH_NUM( twist(v1,v2) );
+        CHECK_WITH_NUM( transvel(a) );
+        CHECK_WITH_NUM( rotvel(a) );
+        CHECK_WITH_NUM( ref_point(a,v1) );
+
+        EXPECT_EQ_EXPR( transvel(twist(v1,v2)), v1 );
+        EXPECT_EQ_EXPR( rotvel(twist(v1,v2)), v2 );
+}
+//
+//
+//
+//
+//
 
 TEST(ExpressionTree, Wrench) {
-        // declare random variables to be used:
-        std::vector<int> ndx; 
-        ndx.push_back(0);
-        //ndx.push_back(2);ndx.push_back(3);
-        Expression<Wrench>::Ptr a = random<Wrench>(ndx);
-        Expression<Wrench>::Ptr b = random<Wrench>(ndx);
+        int ndx=1;
+        Expression<Wrench>::Ptr a = testvar<Wrench>(ndx);
         Expression<Wrench>::Ptr Z = Constant( Wrench::Zero() );
-        Expression<Frame>::Ptr F1 = random<Frame>(ndx);
-        Expression<Frame>::Ptr F2 = random<Frame>(ndx);
-        Expression<Rotation>::Ptr R1 = random<Rotation>(ndx);
-        Expression<Rotation>::Ptr R2 = random<Rotation>(ndx);
-        Expression<Vector>::Ptr   v1 = random<Vector>(ndx);
-        Expression<Vector>::Ptr   v2 = random<Vector>(ndx);
-        Expression<double>::Ptr   s = random<double>(ndx);
+        Expression<Rotation>::Ptr R1 = testvar<Rotation>(ndx);
+        Expression<Rotation>::Ptr R2 = testvar<Rotation>(ndx);
 
         
-        CHECK_ROT_WITH_NUM( wrench(v1,v2) );
-        CHECK_ROT_WITH_NUM( torque(a) );
-        CHECK_ROT_WITH_NUM( force(a) );
-        CHECK_ROT_WITH_NUM( a+b );
-        CHECK_ROT_WITH_NUM( a-b );
-        CHECK_ROT_WITH_NUM( R1*a );
-        CHECK_ROT_WITH_NUM( s*a );
-        CHECK_ROT_WITH_NUM( a*s );
-        CHECK_ROT_WITH_NUM( ref_point(a,v1) );
+        CHECK_WITH_NUM( R1*a );
 
-        EXPECT_EQ_VALUES( (R1*R2)*a, R1*(R2*a) );
-        EXPECT_EQ_VALUES( a-b, -(b-a) );
-        EXPECT_EQ_VALUES( a+a, Constant(2.0)*a );
-        EXPECT_EQ_VALUES( a-a, Z );
-        EXPECT_EQ_VALUES( a+Z, a );
-        EXPECT_EQ_VALUES( Z+a, a );
-        EXPECT_EQ_VALUES( force(wrench(v1,v2)), v1 );
-        EXPECT_EQ_VALUES( torque(wrench(v2,v2)), v2 );
+        EXPECT_EQ_EXPR( (R1*R2)*a, R1*(R2*a) );
 }
 
+TEST(ExpressionTree, WrenchScalarOp) {
+        int ndx=1;
+        Expression<Wrench>::Ptr a = testvar<Wrench>(ndx);
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+
+        
+        CHECK_WITH_NUM( s*a );
+        CHECK_WITH_NUM( a*s );
+}
+
+
+
+TEST(ExpressionTree, WrenchOp) {
+        int ndx=1;
+        Expression<Wrench>::Ptr a = testvar<Wrench>(ndx);
+        Expression<Wrench>::Ptr b = testvar<Wrench>(ndx);
+        Expression<Wrench>::Ptr Z = Constant( Wrench::Zero() );
+
+        
+        CHECK_WITH_NUM( a+b );
+        CHECK_WITH_NUM( a-b );
+
+        EXPECT_EQ_EXPR( a-b, -(b-a) );
+        EXPECT_EQ_EXPR( a+a, Constant(2.0)*a );
+        EXPECT_EQ_EXPR( a-a, Z );
+        EXPECT_EQ_EXPR( a+Z, a );
+        EXPECT_EQ_EXPR( Z+a, a );
+}
+
+TEST(ExpressionTree, WrenchSelectors) {
+        int ndx=1;
+        Expression<Wrench>::Ptr a = testvar<Wrench>(ndx);
+        Expression<Vector>::Ptr   v1 = testvar<Vector>(ndx);
+        Expression<Vector>::Ptr   v2 = testvar<Vector>(ndx);
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+
+        
+        CHECK_WITH_NUM( wrench(v1,v2) );
+        CHECK_WITH_NUM( torque(a) );
+        CHECK_WITH_NUM( force(a) );
+        CHECK_WITH_NUM( ref_point(a,v1) );
+
+        EXPECT_EQ_EXPR( force(wrench(v1,v2)), v1 );
+        EXPECT_EQ_EXPR( torque(wrench(v1,v2)), v2 );
+}
+
+
+
+
+/*
+TEST(ExpressionTree, Wrench) {
+        int ndx=1;
+        Expression<Wrench>::Ptr a = testvar<Wrench>(ndx);
+        Expression<Wrench>::Ptr b = testvar<Wrench>(ndx);
+        Expression<Wrench>::Ptr Z = Constant( Wrench::Zero() );
+        Expression<Frame>::Ptr F1 = testvar<Frame>(ndx);
+        Expression<Frame>::Ptr F2 = testvar<Frame>(ndx);
+        Expression<Rotation>::Ptr R1 = testvar<Rotation>(ndx);
+        Expression<Rotation>::Ptr R2 = testvar<Rotation>(ndx);
+        Expression<Vector>::Ptr   v1 = testvar<Vector>(ndx);
+        Expression<Vector>::Ptr   v2 = testvar<Vector>(ndx);
+        Expression<double>::Ptr   s = testvar<double>(ndx);
+
+        
+        CHECK_WITH_NUM( wrench(v1,v2) );
+        CHECK_WITH_NUM( torque(a) );
+        CHECK_WITH_NUM( force(a) );
+        CHECK_WITH_NUM( a+b );
+        CHECK_WITH_NUM( a-b );
+        CHECK_WITH_NUM( R1*a );
+        CHECK_WITH_NUM( s*a );
+        CHECK_WITH_NUM( a*s );
+        CHECK_WITH_NUM( ref_point(a,v1) );
+
+        EXPECT_EQ_EXPR( (R1*R2)*a, R1*(R2*a) );
+        EXPECT_EQ_EXPR( a-b, -(b-a) );
+        EXPECT_EQ_EXPR( a+a, Constant(2.0)*a );
+        EXPECT_EQ_EXPR( a-a, Z );
+        EXPECT_EQ_EXPR( a+Z, a );
+        EXPECT_EQ_EXPR( Z+a, a );
+        EXPECT_EQ_EXPR( force(wrench(v1,v2)), v1 );
+        EXPECT_EQ_EXPR( torque(wrench(v2,v2)), v2 );
+}
+*/
+/*
 class MonsterExpression : public ::testing::Test {
 protected:
-        std::vector<int> ndx; 
         Expression<Twist>::Ptr a;
         Expression<Wrench>::Ptr b;
         Expression<Wrench>::Ptr Z;
@@ -816,12 +903,11 @@ protected:
 
 
     virtual void SetUp() {
-        ndx.push_back(0);
-        //ndx.push_back(2);ndx.push_back(3);
-        a  = random<Twist>(ndx);
-        b  = random<Wrench>(ndx);
+        int ndx=1;
+        a  = testvar<Twist>(ndx);
+        b  = testvar<Wrench>(ndx);
         Z  = Constant( Wrench::Zero() );
-        s  = random<double>(ndx);
+        s  = testvar<double>(ndx);
         Expression<double>::Ptr s1,s2,s3,s4;
         s1 = cached<double>( -sin(s)*cos(s)+tan(s)   );
         s2 = cached<double>( sin(s)+tan(s) )/s;
@@ -833,20 +919,20 @@ protected:
 };
 
 TEST_F(MonsterExpression, NumericalDerivative) {
-        CHECK_ROT_WITH_NUM( expr );
+        CHECK_WITH_NUM( expr );
+}
+TEST_F(MonsterExpression, DerivativeExpression) {
+        CHECK_WITH_NUM( expr->derivativeExpression(0) );
+        CHECK_WITH_NUM( expr->derivativeExpression(1) );
+        CHECK_WITH_NUM( expr->derivativeExpression(2) );
+        CHECK_WITH_NUM( expr->derivativeExpression(3) );
+        CHECK_WITH_NUM( expr->derivativeExpression(4) );
 }
 
-TEST_F(MonsterExpression, DerivativeExpression) {
-        CHECK_ROT_WITH_NUM( expr->derivativeExpression(0) );
-        CHECK_ROT_WITH_NUM( expr->derivativeExpression(1) );
-        CHECK_ROT_WITH_NUM( expr->derivativeExpression(2) );
-        CHECK_ROT_WITH_NUM( expr->derivativeExpression(3) );
-        CHECK_ROT_WITH_NUM( expr->derivativeExpression(4) );
-}
 
 TEST_F(MonsterExpression, ClonedExpression) {
         Expression<double>::Ptr expr2 = expr->clone();
-        EXPECT_EQ_VALUES( expr, expr2 );
+        EXPECT_EQ_EXPR( expr, expr2 );
         // check whether they influence each other:
         double val1;
         setArbitraryInput<double>( expr );         
@@ -914,12 +1000,10 @@ TEST_F(MonsterExpression, ExpressionOptimizer) {
 
 
 }
-
 TEST(RotationalInputs, Simple) {
     Expression<Rotation>::Ptr e = inputRot(0);
-    CHECK_ROT_WITH_NUM( e );
+    CHECK_WITH_NUM( e );
 }
-
 TEST(RotationalInputs, Simple2) {
     Expression<Rotation>::Ptr e = Constant(Rotation::EulerZYX(0.1,0.2,0.3))*inputRot(0);
     CHECK_ROT_WITH_NUM( e );
@@ -1071,49 +1155,6 @@ bool    KDL::simple_values    = false;
 bool    KDL::check_deriv_expr = true;
 
 
-
-/**
-if (vm.count("compression")) {
-    cout << "Compression level was set to " 
- << vm["compression"].as<int>() << ".\n";
-} else {
-    cout << "Compression level was not set.\n";
-}
-int main(int argc, char **argv){
-    testing::InitGoogleTest(&argc, argv);
-
-    namespace po = boost::program_options;
-    po::options_description desc("Allowed options");
-    // Declare the supported options.
-    desc.add_options()
-        ("help", "produce help message")
-        ("output", "produce output for all of the tests")
-        ("simpleval", "perform the tests using integer values corresponding to the input number")
-        ("no_deriv_expr", "do not perform the tests related to derivativeExpression")
-        ("repeat", po::value<int>(), "repeat the tests for the given number of times")
-    ;
-    po::variables_map vm;
-    po::store(po::parse_command_line(ac, av, desc), vm);
-    po::notify(vm);    
-
-    if (vm.count("help")) {
-        cout << desc << "\n";
-        return 1;
-    }
-    if (vm.count("output")) {
-        debug_output=true;
-    }
-    if (vm.count("simpleval")) {
-        simple_values=true;
-    }
-    if (vm.count("no_deriv_expr")) {
-        check_deriv_expr=true;
-    }
-
-    return RUN_ALL_TESTS();
-}
-
-**/
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
     testing::InitGoogleTest(&argc, argv);

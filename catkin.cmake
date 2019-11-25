@@ -44,8 +44,8 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${EIGEN3_LIBRARIES} ${Boost_LIBRARIES})
 
 # BUILDING AND LINKING TESTS
-catkin_add_gtest(${PROJECT_NAME}_test tests/expressiongraph_test.cpp) 
-target_link_libraries(${PROJECT_NAME}_test
+catkin_add_gtest(test_expressiongraph tests/test_expressiongraph.cpp) 
+target_link_libraries(test_expressiongraph 
   ${catkin_LIBRARIES} ${orocos_kdl_LIBRARIES} ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${Boost_LIBRARIES})
 
 # POTENTIALLY, BUILDING AND LINKING EXAMPLES
