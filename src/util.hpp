@@ -42,7 +42,7 @@
 namespace KDL {
 
 template <typename T>
-inline int getDep( int i, typename Expression<T>::Ptr argument1, typename Expression<T>::Ptr argument2) {
+inline int getDep( int i, typename boost::shared_ptr<Expression<T> > argument1, typename boost::shared_ptr<Expression<T> > argument2) {
         //std::cout << "multiplication between " << std::endl;
         //argument1->print(std::cout);std::cout << std::endl;
         //argument2->print(std::cout);std::cout << std::endl;
@@ -65,7 +65,9 @@ inline int getDep( int i, typename Expression<T>::Ptr argument1, typename Expres
         }
 }
 template <typename T1,typename T2>
-inline int getDep2( int i, typename Expression<T1>::Ptr argument1, typename Expression<T2>::Ptr argument2) {
+inline int getDep2( int i, 
+              boost::shared_ptr<Expression<T1> > argument1, 
+              boost::shared_ptr<Expression<T2> > argument2) {
         //std::cout << "multiplication between " << std::endl;
         //argument1->print(std::cout);std::cout << std::endl;
         //argument2->print(std::cout);std::cout << std::endl;
@@ -88,14 +90,14 @@ inline int getDep2( int i, typename Expression<T1>::Ptr argument1, typename Expr
         }
 }
 template<typename T>
-bool isDepOn(int i, typename Expression<T>::Ptr a) {
+bool isDepOn(int i, boost::shared_ptr<Expression<T> > a) {
         std::set<int> vset;
         a->getDependencies(vset);
         return vset.count(i)>0;
 }
 
 template <typename T>
-inline int getDep( int i, typename Expression<T>::Ptr argument1) {
+inline int getDep( int i, boost::shared_ptr<Expression<T> > argument1) {
         std::set<int> vset1;
         argument1->getDependencies(vset1);
         bool depend1 = vset1.count(i)>0;
