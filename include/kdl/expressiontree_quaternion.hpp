@@ -125,40 +125,6 @@ namespace KDL {
         }
         const static int size=4;
     };
-/*    
-    class Quaternion_doubleVector:
-        public BinaryExpression<Quaternion,double,Vector>
-    {
-    public:
-
-        Quaternion_doubleVector(){}
-        Quaternion_doubleVector(  Expression<double>::Ptr a1, 
-                                  Expression<Vector>::Ptr a2):
-            BinaryExpression<Quaternion,double,Vector>("Quaternion",a1,a2) {}
-
-        virtual Quaternion value() {
-            return Quaternion(argument1->value(),argument2->value());
-        } 
-
-        virtual Quaternion derivative(int i) {
-            return Quaternion(
-                argument1->derivative(i),
-                argument2->derivative(i)
-            );
-        } 
-
-        virtual Expression<Quaternion>::Ptr derivativeExpression(int i);
-
-        virtual Expression<Quaternion>::Ptr clone() {
-            return boost::make_shared<Quaternion_doubleVector>(argument1->clone(), argument2->clone());
-        } 
-    };
-
-    inline Expression<Quaternion>::Ptr quaternion( Expression<double>::Ptr a1, 
-                                    Expression<Vector>::Ptr a2) {
-        return boost::make_shared<Quaternion_doubleVector>(a1,a2);
-    }
-*/
 
     class Quaternion_conj:
         public UnaryExpression<Quaternion,Quaternion>
@@ -677,7 +643,7 @@ namespace KDL {
             Apply_QuaternionVector(
             			const  BinExpr::Argument1Expr::Ptr& arg1,
 			            const  BinExpr::Argument2Expr::Ptr& arg2
-                ): BinExpr("dot",arg1,arg2)
+                ): BinExpr("apply",arg1,arg2)
 				{}
 
            	virtual Vector value() {
@@ -1160,9 +1126,10 @@ namespace KDL {
     }
 
     inline Expression<Quaternion>::Ptr toQuat( 
-            Expression<Vector>::Ptr angle_and_axis, Expression<double>::Ptr angle) 
+            Expression<Vector>::Ptr axis, Expression<double>::Ptr angle) 
     {
-        return exp( normalized(angle_and_axis)*(angle/Constant<double>(2.0)) );
+        return toQuat( normalized(axis)*angle );
+        //return exp( normalized(axis)*(angle/Constant<double>(2.0)) );
     }
 
     inline Expression<Vector>::Ptr axisAngle( const Expression<Quaternion>::Ptr& q) {
