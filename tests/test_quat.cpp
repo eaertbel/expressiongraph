@@ -263,7 +263,7 @@ TEST(DoubleNumDiff, Scalars) {
 
 
 
-TEST(QuaternionNumDiff,operators) {
+TEST(QuaternionNumDiff,operators_Sum) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
@@ -271,11 +271,38 @@ TEST(QuaternionNumDiff,operators) {
     CHECK_WITH_NUM( q2 );
     CHECK_WITH_NUM( -q1 );
     CHECK_WITH_NUM( q1+q2 );
-    CHECK_WITH_NUM( q1+q2 );
     CHECK_WITH_NUM( q1-q2 );
-    CHECK_WITH_NUM( q1*q2 );
-    CHECK_WITH_NUM( -q1 );
 }
+
+TEST(QuaternionNumDiff,operators_Product) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
+    CHECK_WITH_NUM( q1*q2 );
+}
+
+TEST(QuaternionNumDiff,operators_Product_Quaternion_Scalar) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    CHECK_WITH_NUM( q1*Constant(1.0) );
+    CHECK_WITH_NUM( Constant(1.0)*q1 );
+}
+
+TEST(QuaternionNumDiff,operators_Product_Quaternion_Vector) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Vector>::Ptr q2 = testvar<Vector>(ndx);
+    CHECK_WITH_NUM( q1*q2 );
+    CHECK_WITH_NUM( q2*q1 );
+}
+TEST(QuaternionNumDiff,selectors) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    CHECK_WITH_NUM( w(q1) );
+    CHECK_WITH_NUM( vec(q1) );
+}
+
+
 TEST(QuaternionNumDiff,dot_conj) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
@@ -309,10 +336,15 @@ TEST(QuaternionNumDiff, toRot) {
 TEST(QuaternionNumDiff, exp) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
-    Expression<Vector>::Ptr v = testvar<Vector>(ndx);
     CHECK_WITH_NUM(exp(q1));
+}
+
+TEST(QuaternionNumDiff, exp_on_vector) {
+    int ndx=0;
+    Expression<Vector>::Ptr v = testvar<Vector>(ndx);
     CHECK_WITH_NUM(exp(v));
 }
+
 
 TEST(QuaternionNumDiff, normalize) {
     int ndx=0;
@@ -320,7 +352,15 @@ TEST(QuaternionNumDiff, normalize) {
     CHECK_WITH_NUM(normalized(q1));
     CHECK_WITH_NUM(norm(q1));
     CHECK_WITH_NUM(squarednorm(q1));
+    CHECK_WITH_NUM(squarednorm(q1)-norm(q1)*norm(q1));
 }
+
+TEST(QuaternionNumDiff, normalize_vec) {
+    int ndx=0;
+    Expression<Vector>::Ptr q1 = testvar<Vector>(ndx);
+    CHECK_WITH_NUM(normalized(q1));
+}
+
 
 TEST(QuaternionNumDiff, inv) {
     int ndx=0;
@@ -331,8 +371,13 @@ TEST(QuaternionNumDiff, inv) {
 TEST(QuaternionNumDiff, log) {
     int ndx=0;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
-    CHECK_WITH_NUM(logUnit(normalized(q1)));
     CHECK_WITH_NUM(log(q1));
+}
+
+TEST(QuaternionNumDiff, logUnit) {
+    int ndx=0;
+    Expression<Quaternion>::Ptr qn1 = normalized(testvar<Quaternion>(ndx));
+    CHECK_WITH_NUM(logUnit(qn1));
 }
 
 TEST(QuaternionNumDiff, pow) {
@@ -346,7 +391,7 @@ TEST(QuaternionNumDiff, pow) {
 
 TEST(QuaternionNumDiff, apply) {
     int ndx=0;
-    Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
+    Expression<Quaternion>::Ptr q1 = normalized(testvar<Quaternion>(ndx));
     Expression<Vector>::Ptr v = testvar<Vector>(ndx);
     CHECK_WITH_NUM(apply(q1, v));
     CHECK_WITH_NUM(q1*v*conj(q1));
@@ -1020,26 +1065,76 @@ TEST(VariableType, Consistency) {
 }
 **/
 
-// Run all the tests that were declared with TEST()
+
+bool    KDL::debug_output     = false;
+bool    KDL::simple_values    = false;
+bool    KDL::check_deriv_expr = true;
+
+
+
+/**
+if (vm.count("compression")) {
+    cout << "Compression level was set to " 
+ << vm["compression"].as<int>() << ".\n";
+} else {
+    cout << "Compression level was not set.\n";
+}
 int main(int argc, char **argv){
-    debug_output=0;
-    simple_values=0;
     testing::InitGoogleTest(&argc, argv);
-    std::cout << "usage:"<< std::endl;
-    std::cout << "   output    : print additional debugging info\n"
-              << "   simpleval : choose simple test values, otherwise random\n"<<std::endl;;
-    for (int i=1;i<argc;++i) {
-        if (strcmp(argv[i],"output")==0) {
-            std::cout << "additional debugging information will be printed" << std::endl;
-            debug_output=1;
-        }
-        if (strcmp(argv[i],"simpleval")==0) {
-            std::cout << "additional debugging information will be printed" << std::endl;
-            simple_values=1;
-        }
-        
+
+    namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+    // Declare the supported options.
+    desc.add_options()
+        ("help", "produce help message")
+        ("output", "produce output for all of the tests")
+        ("simpleval", "perform the tests using integer values corresponding to the input number")
+        ("no_deriv_expr", "do not perform the tests related to derivativeExpression")
+        ("repeat", po::value<int>(), "repeat the tests for the given number of times")
+    ;
+    po::variables_map vm;
+    po::store(po::parse_command_line(ac, av, desc), vm);
+    po::notify(vm);    
+
+    if (vm.count("help")) {
+        cout << desc << "\n";
+        return 1;
     }
+    if (vm.count("output")) {
+        debug_output=true;
+    }
+    if (vm.count("simpleval")) {
+        simple_values=true;
+    }
+    if (vm.count("no_deriv_expr")) {
+        check_deriv_expr=true;
+    }
+
     return RUN_ALL_TESTS();
 }
 
-
+**/
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv){
+    testing::InitGoogleTest(&argc, argv);
+    std::cout << "usage:"<< std::endl;
+    std::cout << "   output    : print additional debugging info\n"
+              << "   simpleval : choose simple test values, otherwise random\n"
+              << "   no_deriv_expr : no derivative expressions will be tested, only derivative values\n"
+              <<std::endl;;
+    for (int i=1;i<argc;++i) {
+        if (strcmp(argv[i],"output")==0) {
+            std::cout << "additional debugging information will be printed" << std::endl;
+            debug_output=true;
+        }
+        if (strcmp(argv[i],"simpleval")==0) {
+            std::cout << "additional debugging information will be printed" << std::endl;
+            simple_values=true;
+        }
+        if (strcmp(argv[i],"no_deriv_expr")==0) {
+            std::cout << "derivative expresssions will not be tested, only derivative values" << std::endl;
+            check_deriv_expr=false;
+        }     
+    }
+    return RUN_ALL_TESTS();
+}
