@@ -28,7 +28,8 @@
 #include <kdl/expressiontree_rotation.hpp>
 
 
-using namespace KDL {
+
+namespace KDL {
 
 class EulerZYX_double_double_double:
     public TernaryExpression<KDL::Rotation, double, double, double>
