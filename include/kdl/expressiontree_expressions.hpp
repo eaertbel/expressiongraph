@@ -50,6 +50,34 @@ typedef uintptr_t  pnumber;
 namespace KDL {
 
 
+class NotImplementedException : public std::logic_error
+{
+    char msg[512];
+public:
+    NotImplementedException(const char* funcname= __PRETTY_FUNCTION__): std::logic_error("Function not yet implemented") {
+        strncpy(msg,funcname, 512-80); 
+        strcat( msg, " : Function not yet implemented");
+    };
+    virtual const char* what() const noexcept {
+        return msg;
+    }
+};
+
+class NullPointerException : public std::logic_error
+{
+    char msg[512];
+public:
+    NullPointerException(const char* funcname= __PRETTY_FUNCTION__) : std::logic_error("Null pointer is given as an argument") { 
+        strncpy(msg, funcname,512-80);
+        strcat( msg, " : Null pointer is given as an argument");
+    };
+    virtual const char* what() const noexcept {
+        return msg;
+    } 
+};
+
+
+
 class ExpressionOptimizer;
 
 
@@ -334,11 +362,9 @@ public:
     virtual int number_of_derivatives() = 0;
 
 
-    virtual typename Expression<DerivType>::Ptr derivativeExpression(int i) = 0;
-    /*{
-        assert(0 && "NOT YET IMPLEMENTED");
-        // when everything is implemented change this in an abstract method.
-    }*/
+    virtual typename Expression<DerivType>::Ptr derivativeExpression(int i) {
+        throw NotImplementedException();
+    }
 
    
     /**
@@ -1777,7 +1803,7 @@ inline void CachedExpression::addToOptimizer(ExpressionOptimizer& opt) {
 template<typename T>
 inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a ) {
         if (!a) {
-            throw std::out_of_range("checkConstant: null pointer is given as an argument");
+            throw NullPointerException();
         }
         std::set<int> vset;
         a->getDependencies(vset);
@@ -1791,7 +1817,7 @@ inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a 
 template<typename T>
 inline bool isConstant( typename Expression<T>::Ptr a) {
     if (!a) {
-        throw std::out_of_range("null pointer is given as an argument");
+        throw NullPointerException();
     }
     std::set<int> vset;
     a->getDependencies(vset);
@@ -1800,7 +1826,7 @@ inline bool isConstant( typename Expression<T>::Ptr a) {
 
 inline bool isConstantZero( Expression<double>::Ptr a) {
     if (!a) {
-        throw std::out_of_range("null pointer is given as an argument");
+        throw NullPointerException();
     }
     std::set<int> vset;
     a->getDependencies(vset);
@@ -1809,7 +1835,7 @@ inline bool isConstantZero( Expression<double>::Ptr a) {
 
 inline bool isConstantOne( Expression<double>::Ptr a) {
     if (!a) {
-        throw std::out_of_range("null pointer is given as an argument");
+        throw NullPointerException();
     }
     std::set<int> vset;
     a->getDependencies(vset);

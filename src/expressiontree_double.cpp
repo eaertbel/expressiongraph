@@ -213,10 +213,11 @@ namespace KDL {
     }
 
     Expression<double>::Ptr Abs_Double::derivativeExpression(int i) {
-        assert( 0 && "Not yet implemented, need an ExpressionTree sign function"); 
-        //return val * argument->derivativeExpression(i);
-        return Expression<double>::Ptr();
-    }
+        return conditional<double>(argument,
+                 argument->derivativeExpression(i), 
+                 -argument->derivativeExpression(i) 
+               );
+     } 
 
     Expression<double>::Ptr Fmod_Double::derivativeExpression(int i) {
         // Note: This is a simplified version of the derivative which

@@ -171,8 +171,7 @@ public:
     // typically for this type of objects, derivativeExpression is not allowed,
     // (but you can always override it)
     virtual typename Expression<ResultType>::Ptr derivativeExpression(int i) {
-        assert( 0 /* derivativeExpression of MIMO_Output not allowed */);
-        return typename Expression<ResultType>::Ptr();
+        throw NotImplementedException();
     }
 
     virtual void print(std::ostream& os) const {

@@ -878,7 +878,7 @@ inline typename Expression<R>::Ptr conditional( typename Expression<double>::Ptr
                                        typename Expression<R>::Ptr a2,
                                        typename Expression<R>::Ptr a3) {
     if (!a1 || !a2 || !a3) {
-        throw std::out_of_range("conditional: null pointer is given as one of the arguments");
+        throw NullPointerException();
     }
     std::set<int> vset;
     a1->getDependencies(vset);

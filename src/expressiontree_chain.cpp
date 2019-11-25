@@ -222,13 +222,13 @@ Twist Expression_Chain_Derivative::derivative(int i) {
 }
 
 Expression<Twist>::Ptr Expression_Chain_Derivative::derivativeExpression(int i) {
-    assert(0 && "Not yet implemented");
-    return Expression<Twist>::Ptr();
+    throw NotImplementedException();
 }
 
 Expression<Twist>::Ptr Expression_Chain_Derivative::clone() {
-    assert(0 && "Implementation of Expression_Chain_Derivative::clone() is not correct and preliminary");
-    Expression<Twist>::Ptr expr( new Expression_Chain_Derivative( argument, var_ndx) ); 
-    return expr;  
+    throw NotImplementedException();
+    //"Implementation of Expression_Chain_Derivative::clone() is not correct and preliminary");
+    //Expression<Twist>::Ptr expr( new Expression_Chain_Derivative( argument, var_ndx) ); 
+    //return expr;  
 } 
 }; // end of namespace KDL

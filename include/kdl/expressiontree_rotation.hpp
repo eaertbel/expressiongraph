@@ -511,9 +511,10 @@ public:
         KDL::Vector tmp(  (omegax(2,1)-omegax(1,2))/2.0,  ( omegax(0,2)-omegax(2,0))/2.0, (omegax(1,0)-omegax(0,1))/2.0 );  
         return tmp;
     } 
-    virtual Expression<Vector>::Ptr derivativeExpression(int i) {
-        assert( 0 /*not yet implemented */ );
-    }
+
+    //virtual Expression<Vector>::Ptr derivativeExpression(int i) {
+    //    assert( 0 /*not yet implemented */ );
+    //}
     virtual TExpr::Ptr clone() {
         TExpr::Ptr expr( new Construct_Rotation( argument1->clone(), argument2->clone(), argument3->clone()));
         return expr;
