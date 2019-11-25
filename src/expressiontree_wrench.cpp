@@ -29,7 +29,7 @@
 namespace KDL {
 Expression<Wrench>::Ptr Wrench_VectorVector::derivativeExpression(int i)
 {
-    return wrench( argument1, argument2 );
+    return wrench( argument1->derivativeExpression(i), argument2->derivativeExpression(i) );
 }
 Expression<Vector>::Ptr Force_Wrench::derivativeExpression(int i) {
     return force(argument->derivativeExpression(i));
@@ -47,7 +47,7 @@ Expression<Wrench>::Ptr Addition_WrenchWrench::derivativeExpression(int i) {
     return argument1->derivativeExpression(i) + argument2->derivativeExpression(i);
 }
 Expression<Wrench>::Ptr Subtraction_WrenchWrench::derivativeExpression(int i) {
-    return argument1->derivativeExpression(i) + argument2->derivativeExpression(i);
+    return argument1->derivativeExpression(i) - argument2->derivativeExpression(i);
 }
 
 Expression<Wrench>::Ptr Composition_RotationWrench::derivativeExpression(int i) {

@@ -30,7 +30,7 @@ namespace KDL {
 
 Expression<Twist>::Ptr Twist_VectorVector::derivativeExpression(int i)
 {
-    return twist( argument1, argument2 );
+    return twist( argument1->derivativeExpression(i), argument2->derivativeExpression(i) );
 }
 
 
