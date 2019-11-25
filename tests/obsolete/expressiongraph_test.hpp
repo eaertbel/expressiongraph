@@ -198,10 +198,10 @@ void setArbitraryInput(typename Expression<T>::Ptr e) {
         e->setInputValue(*it, arg);
     }
 }
-
 /** 
  * A predicate format to check the derivative using numerical differentiation:
  * Evaluation is for arbitrary input values, towards all relevant variables.
+ *
  */
 template <class T>
 ::testing::AssertionResult CheckNumerical(        
@@ -222,7 +222,9 @@ template <class T>
   for (int i=0;i<n1;++i) {
         // check derivative towards variable i:
         Td d1 = numerical_derivative<T>(m,i,arg[i], h );
+        std::cout << d1 << std::endl;
         Td d2 = m->derivative(i);
+        std::cout << d2 << std::endl;
         if (!Equal(d1,d2,tol)) {
             std::stringstream os;
             os << "check using numerical derivative failed for " << mstr << " : \n";  
@@ -237,6 +239,32 @@ template <class T>
 
 #define CHECK_WITH_NUM( a ) \
     EXPECT_PRED_FORMAT1(CheckNumerical, a );
+
+/**
+ * computing the numerical derivative for an expression tree
+ * ( not using the derivative() function )
+ * \param expr [in] expression to compute the numerical derivative.
+ * \param towards_var [in]  variable number of the variable towards the derivative will be taken.
+ * \param value [in]  value for the towards_var-th variable. 
+ * \param h [in] interval over which to take the numerical derivative. 
+ */
+template<typename ResultType>
+typename AutoDiffTrait<ResultType>::DerivType
+inline numerical_derivative_print( typename Expression<ResultType>::Ptr expr, int towards_var, double value, double h=1E-7) {
+    ResultType a,b;
+    double val;
+    val = value - h;
+    expr->setInputValue(towards_var,val);
+    a = expr->value();
+
+    val = value + h;
+    expr->setInputValue(towards_var,val);
+    b = expr->value();
+    std::cout << "f(x-h) " << a  << std::endl;
+    std::cout << "f(x+h) " << b  << std::endl;
+    std::cout << "diff " << KDL::diff(a,b,1.0)/2/h << std::endl;
+    return KDL::diff(a,b,1.0)/(2.0*h);
+}
 
 
 /** 
@@ -280,10 +308,17 @@ template <class T>
         // check derivative towards variable i:
         Td d1 = numerical_derivative<T>(e,scalar_ndx[i],scalar_value[i], h );
         Td d2 = e->derivative(scalar_ndx[i]);
+        //std::cout << d1 << " compared to " << d2 << std::endl;
         if (!Equal(d1,d2,tol)) {
             std::stringstream os;
             os << "check using numerical derivative failed for " << mstr << " : \n";  
-            os << "derivative towards variable " << i << "\n";
+            os << "expression "; e->print(os); os << "\n";
+            for (size_t j=0;j<scalar_ndx.size();++j) {
+                os << "   var " << scalar_ndx[j] << " value=" << scalar_value[j] << "\n";
+            }
+            os << "value " << e->value() << "\n";
+            Td d3 = numerical_derivative_print<T>(e,scalar_ndx[i],scalar_value[i], h );
+            os << "derivative towards variable " << scalar_ndx[i] << "\n";
             os << "numerical differentiation:\n" << d1 << "\n"; 
             os << "automatic differentiation:\n" << d2 << "\n"; 
             return ::testing::AssertionFailure() << os.str();
@@ -297,7 +332,7 @@ template <class T>
             if (!Equal(d1,d2,tol)) {
                 std::stringstream os;
                 os << "check using numerical derivative failed for " << mstr << " : \n";  
-                os << "derivative towards rot variable " << i << " and component " << c << "\n";
+                os << "derivative towards rot variable " << scalar_ndx[i] << " and component " << c << "\n";
                 os << "numerical differentiation:\n" << d1 << "\n"; 
                 os << "automatic differentiation:\n" << d2 << "\n"; 
                 return ::testing::AssertionFailure() << os.str();
