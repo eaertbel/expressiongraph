@@ -29,6 +29,7 @@
 #include "expressiontree_chain.hpp"
 #include "expressiontree_var.hpp"
 #include "expressiontree_mimo.hpp"
+#include "expressiontree_quaternion.hpp"
 
 #endif
 

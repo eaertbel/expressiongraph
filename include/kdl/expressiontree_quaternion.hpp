@@ -94,20 +94,9 @@
 #include <kdl/quat.hpp>
 #include <kdl/quat_io.hpp>
 #include <boost/shared_ptr.hpp>
-namespace KDL{
-    namespace detail {
-        inline void print(std::ostream& os, const Quaternion&  val) {
-            os << "constant( Quaternion(";
-            KDL::operator<<(os, val);
-            os << "))"; 
-         }
-    } // namespace detail
-}
 #include <kdl/expressiontree_expressions.hpp>
 #include <kdl/expressiontree_double.hpp>
 #include <kdl/expressiontree_vector.hpp>
-//#include <Eigen/Geometry>
-//#include <kdl/conversions.hpp>
 
 /**
  *
