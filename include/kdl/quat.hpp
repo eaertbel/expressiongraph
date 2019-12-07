@@ -306,6 +306,21 @@ namespace KDL {
             return q0 * pow( inv(q0)*q1, s);
         }
     }
+    /**
+     * Spherical interpolation between q0 (s==0) and q1 (s==1)
+     * assuming normalized q0 and q1
+     */
+    inline Quaternion slerpUnit( const Quaternion& q0, const Quaternion& q1, double s ) {
+        double c = dot(q0, q1);
+        if (c < 0.0) {
+            // half angle is over PI/2, flip one of the quaternions to get shortest path
+            // from q0 to q1 
+            return q0 * powUnit( -conj(q0)*q1, s);
+        } else {
+            return q0 * powUnit( conj(q0)*q1, s);
+        }
+    }
+
 
     /**
      * The rotational velocity vector to go from q1 to q2 in one unit of time.
