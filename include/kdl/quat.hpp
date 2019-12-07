@@ -279,7 +279,7 @@ namespace KDL {
     /**
      * returns rotational axis multiplied by angle
      */
-    inline Vector axis( const Quaternion& q) {
+    inline Vector axisAngle( const Quaternion& q) {
         return logUnit(q)*2.0;
     }
  

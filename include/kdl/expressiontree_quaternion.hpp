@@ -1121,7 +1121,7 @@ namespace KDL {
         //return exp( normalized(axis)*(angle/Constant<double>(2.0)) );
     }
 
-    inline Expression<Vector>::Ptr axisAngle( const Expression<Quaternion>::Ptr& q) {
+    inline Expression<Vector>::Ptr axisAngle( Expression<Quaternion>::Ptr q) {
         return logUnit(q)*Constant<double>(2.0);
     }
 
