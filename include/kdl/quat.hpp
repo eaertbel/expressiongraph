@@ -56,12 +56,16 @@ namespace KDL {
         return v;
     }
     
-    inline double squarednorm( const Quaternion& q) {
+    inline double squared_norm( const Quaternion& q) {
         return q.w*q.w +  dot(q.vec,q.vec);
+    }
+ 
+    inline double squared_norm( const Vector& q) {
+        return dot(q,q);
     }
 
     inline double norm( const Quaternion& q) {
-        return sqrt( squarednorm(q) );
+        return sqrt( squared_norm(q) );
     }
 
     inline void Quaternion::normalize() {
@@ -141,7 +145,7 @@ namespace KDL {
     }
 
     inline Quaternion inv( const Quaternion& q) {
-        return conj(q)/squarednorm(q);
+        return conj(q)/squared_norm(q);
     }
  
 

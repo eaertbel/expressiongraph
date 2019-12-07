@@ -405,7 +405,7 @@ RotationFromQuaternion::derivativeExpression(int i) {
 }
 
 Expression<double>::Ptr 
-Quaternion_squarednorm::derivativeExpression(int i) {
+Quaternion_squared_norm::derivativeExpression(int i) {
         int nr = getDep(i,argument);
         if (nr==1) {
             return Constant<double>(0.0);

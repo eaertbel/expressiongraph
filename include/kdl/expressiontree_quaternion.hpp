@@ -43,9 +43,9 @@
      *   conj(q)        : quaternion conjugate, i.e. (w,-vec)
      *   w(q)           : real part of quaternion == (q+conj(q))/2
      *   vec(q)         : vector part of quaternion == (q-conj(q))/2
-     *   squarednorm(q) : conj(q)*q
+     *   squared_norm(q) : conj(q)*q
      *   norm(q)        : sqrt( conj(q)*q )
-     *   inv(q)         : quaternion inverse, i.e. inv(q)*q == 1,  inv(q) == conj(q)/squarednorm(q)
+     *   inv(q)         : quaternion inverse, i.e. inv(q)*q == 1,  inv(q) == conj(q)/squared_norm(q)
      *   normalized(q)  : returns a unit quaternion, q/norm(q), 
      *                    for norm(q)==0, returns quaternion with w=1 and vec=0,0,0.
      *   normalized(v)  : returns a unit vector, v/norm(v), for norm(v)==0, returns vec=0,0,0 )
@@ -195,17 +195,17 @@ namespace KDL {
         } 
     };
 
-    class Quaternion_squarednorm:
+    class Quaternion_squared_norm:
         public UnaryExpression<double,Quaternion>
     {   
     public:
         Quaternion q;
         typedef UnaryExpression<double,Quaternion> UnExpr;
  
-        Quaternion_squarednorm() {}
+        Quaternion_squared_norm() {}
 
-        Quaternion_squarednorm(const UnExpr::ArgumentExpr::Ptr& arg):
-            UnExpr("squarednorm",arg) {}
+        Quaternion_squared_norm(const UnExpr::ArgumentExpr::Ptr& arg):
+            UnExpr("squared_norm",arg) {}
         
         virtual double value() {
             q = argument->value();
@@ -221,7 +221,7 @@ namespace KDL {
         virtual Expression<double>::Ptr derivativeExpression(int i);
 
         virtual Expression<double>::Ptr clone() {
-            return boost::make_shared<Quaternion_squarednorm>(argument->clone());
+            return boost::make_shared<Quaternion_squared_norm>(argument->clone());
         } 
     };
 
@@ -976,8 +976,8 @@ namespace KDL {
         return boost::make_shared<Quaternion_vec>(a);
     }
 
-    inline Expression<double>::Ptr squarednorm( Expression<Quaternion>::Ptr a) {
-        return boost::make_shared<Quaternion_squarednorm>(a);
+    inline Expression<double>::Ptr squared_norm( Expression<Quaternion>::Ptr a) {
+        return boost::make_shared<Quaternion_squared_norm>(a);
     }
 
     inline Expression<double>::Ptr norm( Expression<Quaternion>::Ptr a) {
@@ -1036,7 +1036,7 @@ namespace KDL {
     }
     
     inline Expression<Quaternion>::Ptr inv( Expression<Quaternion>::Ptr q) {
-        return conj(q) / squarednorm(q);
+        return conj(q) / squared_norm(q);
     }
 
     inline Expression<double>::Ptr dot ( 

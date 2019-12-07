@@ -37,8 +37,8 @@ TEST(QuaternionValues, comparisonWithMatrices) {
 TEST(QuaternionValues, normOps) {
     Quaternion q1 = randomQuaternion(); 
     EXPECT_EQ_QUAT( q1/norm(q1), normalized(q1) );
-    EXPECT_EQ_QUAT( squarednorm(q1), norm(q1)*norm(q1) );
-    EXPECT_EQ_QUAT( squarednorm(q1), dot(q1,q1) );
+    EXPECT_EQ_QUAT( squared_norm(q1), norm(q1)*norm(q1) );
+    EXPECT_EQ_QUAT( squared_norm(q1), dot(q1,q1) );
 }
 
 
@@ -97,9 +97,9 @@ TEST(QuaternionValues, norm) {
     Quaternion q1 = randomQuaternion(); 
     Quaternion q2 = randomQuaternion(); 
     q2.w=0;
-    EXPECT_EQ_QUAT( -(q2*q2), squarednorm(q2)*Quaternion(1,0,0,0)) ;
-    EXPECT_EQ_QUAT( squarednorm(q1), norm(q1)*norm(q1) );
-    EXPECT_EQ_QUAT( squarednorm(q1), dot(q1,q1) );
+    EXPECT_EQ_QUAT( -(q2*q2), squared_norm(q2)*Quaternion(1,0,0,0)) ;
+    EXPECT_EQ_QUAT( squared_norm(q1), norm(q1)*norm(q1) );
+    EXPECT_EQ_QUAT( squared_norm(q1), dot(q1,q1) );
 }
 
 TEST(QuaternionValues, operatorRelations) {
@@ -181,7 +181,7 @@ TEST(QuaternionCompareValueExpr,normOps) {
     int ndx=1;
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     EXPECT_EQ_QUAT( (q1/norm(q1))->value(), q1->value() / norm( q1->value() ) );
-    EXPECT_EQ_QUAT( squarednorm(q1)->value(), squarednorm(q1->value()) );
+    EXPECT_EQ_QUAT( squared_norm(q1)->value(), squared_norm(q1->value()) );
     EXPECT_EQ_QUAT( norm(q1)->value(), norm(q1->value()) );
     EXPECT_EQ_QUAT( dot(q1,q1)->value(), dot(q1->value(),q1->value()) );
 } 
@@ -351,8 +351,8 @@ TEST(QuaternionNumDiff, normalize) {
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     CHECK_WITH_NUM(normalized(q1));
     CHECK_WITH_NUM(norm(q1));
-    CHECK_WITH_NUM(squarednorm(q1));
-    CHECK_WITH_NUM(squarednorm(q1)-norm(q1)*norm(q1));
+    CHECK_WITH_NUM(squared_norm(q1));
+    CHECK_WITH_NUM(squared_norm(q1)-norm(q1)*norm(q1));
 }
 
 TEST(QuaternionNumDiff, normalize_vec) {
@@ -509,8 +509,8 @@ TEST(QuaternionExpr, normOps) {
     Expression<Quaternion>::Ptr q1 = testvar<Quaternion>(ndx);
     Expression<Quaternion>::Ptr q2 = testvar<Quaternion>(ndx);
     EXPECT_EQ_EXPR( normalized(q1) , q1 / norm(q1) );
-    EXPECT_EQ_EXPR( squarednorm(q1), dot(q1,q1 ));
-    EXPECT_EQ_EXPR( squarednorm(q1), norm(q1)*norm(q1) );
+    EXPECT_EQ_EXPR( squared_norm(q1), dot(q1,q1 ));
+    EXPECT_EQ_EXPR( squared_norm(q1), norm(q1)*norm(q1) );
     EXPECT_EQ_EXPR( Constant(1.0), norm( normalized(q1) * normalized(q1) ));
     EXPECT_EQ_EXPR( Constant(1.0), norm( normalized(q1)  ));
 }
