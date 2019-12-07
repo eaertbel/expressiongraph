@@ -26,6 +26,8 @@
 #include <kdl/framevel.hpp>
 #include <kdl/stiffness.hpp>
 #include <kdl/frames_io.hpp>
+#include <kdl/quat.hpp>
+#include <kdl/quat_io.hpp>
 #include <boost/smart_ptr.hpp>
 #include <kdl/utilities/utility.h>
 #include <vector>
@@ -52,28 +54,17 @@ namespace KDL {
 
 class NotImplementedException : public std::logic_error
 {
-    char msg[512];
 public:
-    NotImplementedException(const char* funcname= __PRETTY_FUNCTION__): std::logic_error("Function not yet implemented") {
-        strncpy(msg,funcname, 512-80); 
-        strcat( msg, " : Function not yet implemented");
+    NotImplementedException(const char* funcname= __PRETTY_FUNCTION__): std::logic_error(std::string(funcname) + " : Function not yet implemented") {
     };
-    virtual const char* what() const noexcept {
-        return msg;
-    }
 };
 
 class NullPointerException : public std::logic_error
 {
     char msg[512];
 public:
-    NullPointerException(const char* funcname= __PRETTY_FUNCTION__) : std::logic_error("Null pointer is given as an argument") { 
-        strncpy(msg, funcname,512-80);
-        strcat( msg, " : Null pointer is given as an argument");
+    NullPointerException(const char* funcname= __PRETTY_FUNCTION__) : std::logic_error(std::string(funcname) + " : Null pointer is given as an argument") { 
     };
-    virtual const char* what() const noexcept {
-        return msg;
-    } 
 };
 
 
@@ -933,41 +924,47 @@ public:
 };
 
 namespace detail {
-inline void print(std::ostream& os, double val) {
-    os << "constant(" << val << ")"; 
-}
+    inline void print(std::ostream& os, double val) {
+        os << "constant(" << val << ")"; 
+    }
 
-inline void print(std::ostream& os, const KDL::Vector& v) {
-    os << "constant(Vector(" << v.x() << "," << v.y() << "," << v.z()  << "))"; 
-}
+    inline void print(std::ostream& os, const KDL::Vector& v) {
+        os << "constant(Vector(" << v.x() << "," << v.y() << "," << v.z()  << "))"; 
+    }
 
-inline void print(std::ostream& os, const KDL::Rotation& R) {
-    os << "constant(Rotation(" << R(0,0) << "," << R(0,1) << "," << R(0,2)  << "," 
-                                                 << R(1,0) << "," << R(1,1) << "," << R(1,2)  << "," 
-                                                 << R(2,0) << "," << R(2,1) << "," << R(2,2)  << "))" ;
-}
+    inline void print(std::ostream& os, const KDL::Rotation& R) {
+        os << "constant(Rotation(" << R(0,0) << "," << R(0,1) << "," << R(0,2)  << "," 
+                                                     << R(1,0) << "," << R(1,1) << "," << R(1,2)  << "," 
+                                                     << R(2,0) << "," << R(2,1) << "," << R(2,2)  << "))" ;
+    }
 
-inline void print(std::ostream& os, const KDL::Frame& F) {
-    os <<  "constant(Frame(Rotation(" << F.M(0,0) << "," << F.M(0,1) << "," << F.M(0,2)  << "," 
-                                        << F.M(1,0) << "," << F.M(1,1) << "," << F.M(1,2)  << "," 
-                                        << F.M(2,0) << "," << F.M(2,1) << "," << F.M(2,2)  << "),";
-    os << "Vector("<<F.p(0) << "," << F.p(1) << "," << F.p(2) << ")))";
-}
+    inline void print(std::ostream& os, const Quaternion&  val) {
+            os << "constant( Quaternion(";
+            KDL::operator<<(os, val);
+            os << "))"; 
+    }
 
-inline void print(std::ostream& os, const KDL::Twist& t) {
-    os <<  "constant(Twist(Vector(" << t.vel(0) << "," << t.vel(1) << "," << t.vel(2)  << ")," 
-                               << "Vector(" << t.rot(0) << "," << t.rot(1) << "," << t.rot(2)  << ")))";
-}
+    inline void print(std::ostream& os, const KDL::Frame& F) {
+        os <<  "constant(Frame(Rotation(" << F.M(0,0) << "," << F.M(0,1) << "," << F.M(0,2)  << "," 
+                                            << F.M(1,0) << "," << F.M(1,1) << "," << F.M(1,2)  << "," 
+                                            << F.M(2,0) << "," << F.M(2,1) << "," << F.M(2,2)  << "),";
+        os << "Vector("<<F.p(0) << "," << F.p(1) << "," << F.p(2) << ")))";
+    }
 
-inline void print(std::ostream& os, const KDL::Wrench& t) {
-    os <<  "constant(Wrench(Vector(" << t.force(0) << "," << t.force(1) << "," << t.force(2)  << ")," 
-                               << "Vector(" << t.torque(0) << "," << t.torque(1) << "," << t.torque(2)  << ")))";
-}
+    inline void print(std::ostream& os, const KDL::Twist& t) {
+        os <<  "constant(Twist(Vector(" << t.vel(0) << "," << t.vel(1) << "," << t.vel(2)  << ")," 
+                                   << "Vector(" << t.rot(0) << "," << t.rot(1) << "," << t.rot(2)  << ")))";
+    }
 
-template <int n, int m>
-inline void print(std::ostream& os, const Eigen::Matrix<double,n,m>&  t) {
-    os <<  "constant(Matrix["<<n<<","<<m<<"](" << t << "))";
-}
+    inline void print(std::ostream& os, const KDL::Wrench& t) {
+        os <<  "constant(Wrench(Vector(" << t.force(0) << "," << t.force(1) << "," << t.force(2)  << ")," 
+                                   << "Vector(" << t.torque(0) << "," << t.torque(1) << "," << t.torque(2)  << ")))";
+    }
+
+    template <int n, int m>
+    inline void print(std::ostream& os, const Eigen::Matrix<double,n,m>&  t) {
+        os <<  "constant(Matrix["<<n<<","<<m<<"](" << t << "))";
+    }
 
 }// namespace detail
 
