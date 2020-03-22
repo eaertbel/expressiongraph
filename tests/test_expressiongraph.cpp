@@ -90,7 +90,7 @@ TEST(QuaternionValues, axisAngle) {
     EXPECT_EQ_UNITQUAT( q1  ,  toQuat(axis*angle) );
     EXPECT_EQ_UNITQUAT( q1  ,  exp(axis*angle/2) );
     EXPECT_EQ_VECTOR( axis*angle/2, logUnit(q1) );
-    EXPECT_EQ_VECTOR( axis/norm(axis), KDL::axis(q1)/norm(KDL::axis(q1)) );
+    EXPECT_EQ_VECTOR( axis/norm(axis), axisAngle(q1)/norm(axisAngle(q1)) );
 }
 
 TEST(QuaternionValues, norm) {
