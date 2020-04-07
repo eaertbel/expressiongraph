@@ -6,7 +6,7 @@
  *
 ***************************************************************************/
 
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 
 /**
  * This tutorial is not finished.  Correctness is not verified !

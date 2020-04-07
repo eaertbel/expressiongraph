@@ -24,7 +24,7 @@
 #ifndef KDL_EXPRESSIONTREE_CHAIN_HPP
 #define KDL_EXPRESSIONTREE_CHAIN_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
 #include <kdl/jntarray.hpp>
 #include <kdl/chain.hpp>
 

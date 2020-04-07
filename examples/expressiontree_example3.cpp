@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 
 /**
  * An example of a <double> expression in multiple variables.

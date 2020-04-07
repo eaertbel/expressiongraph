@@ -21,7 +21,7 @@
 #ifndef KDL_EXPRESSIONTREE_TWIST_HPP
 #define KDL_EXPRESSIONTREE_TWIST_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include "expressiontree_expressions.hpp"
 #include <kdl/frames.hpp>
 
 namespace KDL {

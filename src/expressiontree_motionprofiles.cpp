@@ -1,5 +1,5 @@
-#include <kdl/expressiontree_motionprofiles.hpp>
-#include <kdl/mptrap.hpp>
+#include <expressiongraph/expressiontree_motionprofiles.hpp>
+#include <expressiongraph/mptrap.hpp>
 #include <limits>
 
 namespace KDL {

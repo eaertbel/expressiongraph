@@ -7,7 +7,7 @@
 ***************************************************************************/
 
 
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 #include <vector>
 
 int main(int argc, char* argv[]) {

@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_quaternion.hpp>
+#include <expressiongraph/expressiontree_quaternion.hpp>
 #include "util.hpp"
 
 namespace KDL {

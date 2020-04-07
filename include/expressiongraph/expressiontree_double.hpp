@@ -22,7 +22,7 @@
 #ifndef KDL_EXPRESSIONTREE_DOUBLE_HPP
 #define KDL_EXPRESSIONTREE_DOUBLE_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include "expressiontree_expressions.hpp"
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 

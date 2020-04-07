@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_chain.hpp>
+#include <expressiongraph/expressiontree_chain.hpp>
 #include <iostream>
 namespace KDL {
 

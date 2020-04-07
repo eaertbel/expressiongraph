@@ -26,7 +26,7 @@ int main(int argc,char* argv[]) {
 }
 **/
 
-#include <kdl/expressiontree_motionprofiles.hpp>
+#include <expressiongraph/expressiontree_motionprofiles.hpp>
 
 int main(int argc, char* argv[]) {
     using namespace KDL;

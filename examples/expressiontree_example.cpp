@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 
 /*
  * Example on how to use VariableType

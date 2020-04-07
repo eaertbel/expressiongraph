@@ -1,4 +1,4 @@
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 
 /*
  * Example on how to use the initial_value function.

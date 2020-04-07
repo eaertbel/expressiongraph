@@ -91,12 +91,11 @@
 
 #ifndef KDL_EXPRESSIONTREE_QUATERNION_HPP
 #define KDL_EXPRESSIONTREE_QUATERNION_HPP
-#include <kdl/quat.hpp>
-#include <kdl/quat_io.hpp>
-#include <boost/shared_ptr.hpp>
-#include <kdl/expressiontree_expressions.hpp>
-#include <kdl/expressiontree_double.hpp>
-#include <kdl/expressiontree_vector.hpp>
+#include <expressiongraph/quat.hpp>
+#include <expressiongraph/quat_io.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_double.hpp>
+#include <expressiongraph/expressiontree_vector.hpp>
 
 /**
  *

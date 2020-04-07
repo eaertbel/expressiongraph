@@ -1,12 +1,11 @@
 //#include <Eigen/Geometry>
 #include <iostream>
 #include <kdl/frames.hpp>
-#include <kdl/quat_io.hpp>
 #include <kdl/frames_io.hpp>
-#include <kdl/conversions.hpp>
-#include <kdl/quat.hpp>
-#include <kdl/quat_io.hpp>
-#include <kdl/expressiontree_quaternion.hpp>
+#include <expressiongraph/quat_io.hpp>
+#include <expressiongraph/conversions.hpp>
+#include <expressiongraph/quat.hpp>
+#include <expressiongraph/expressiontree_quaternion.hpp>
 
 using namespace std;
 //using namespace Eigen;

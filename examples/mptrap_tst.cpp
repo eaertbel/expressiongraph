@@ -4,7 +4,7 @@
 // Typically this class is not used directly, but the expressiongraph node
 // MotionProfileTrapezoidal is used.
 //
-#include <kdl/mptrap.hpp>
+#include <expressiongraph/mptrap.hpp>
 
 using namespace KDL;
 using namespace std;

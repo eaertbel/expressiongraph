@@ -22,7 +22,7 @@
 #ifndef KDL_QUAT_IO_HPP
 #define KDL_QUAT_IO_HPP
 
-#include <kdl/quat.hpp>
+#include "quat.hpp"
 #include <iostream>
 namespace KDL {
 inline std::ostream& operator << (std::ostream& os,const KDL::Quaternion& q) {

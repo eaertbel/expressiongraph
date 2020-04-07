@@ -1,8 +1,7 @@
 #ifndef EXPRESSIONGRAPH_TEST_EXPRESSIONGRAPH_HPP
 #define EXPRESSIONGRAPH_TEST_EXPRESSIONGRAPH_HPP
 
-#include <kdl/expressiontree_quaternion.hpp>
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 #include <gtest/gtest.h>
 #include <string.h>
 

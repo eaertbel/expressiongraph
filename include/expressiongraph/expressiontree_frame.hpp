@@ -22,7 +22,7 @@
 #ifndef KDL_EXPRESSIONTREE_FRAME_HPP
 #define KDL_EXPRESSIONTREE_FRAME_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
 #include <kdl/frames.hpp>
 /*
  * \todo : complete documentation

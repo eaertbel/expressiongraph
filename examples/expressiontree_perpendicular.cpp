@@ -5,7 +5,7 @@
  * \Author: Sept. 2012, Erwin Aertbelien 
 ***************************************************************************/
 
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 #include <fstream>
 #include <boost/timer.hpp>
 

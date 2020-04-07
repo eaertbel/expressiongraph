@@ -1,7 +1,7 @@
 #include <iostream>
 #include <kdl/frames.hpp>
-#include <kdl/expressiontree.hpp>
-#include <kdl/conversions.hpp>
+#include <expressiongraph/expressiontree.hpp>
+#include <expressiongraph/conversions.hpp>
 #include <Eigen/Cholesky>
 using namespace KDL;
 

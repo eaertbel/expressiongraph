@@ -1,4 +1,4 @@
-#include <kdl/mptrap.hpp>
+#include <expressiongraph/mptrap.hpp>
 #include <limits>
 #include <math.h>
 namespace KDL {

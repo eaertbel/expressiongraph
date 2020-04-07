@@ -19,7 +19,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_expressions.hpp>
+#include "expressiontree_expressions.hpp"
 
 namespace KDL { 
 

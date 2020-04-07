@@ -26,8 +26,8 @@
 #include <kdl/framevel.hpp>
 #include <kdl/stiffness.hpp>
 #include <kdl/frames_io.hpp>
-#include <kdl/quat.hpp>
-#include <kdl/quat_io.hpp>
+#include "quat.hpp"
+#include "quat_io.hpp"
 #include <boost/smart_ptr.hpp>
 #include <kdl/utilities/utility.h>
 #include <vector>
@@ -39,7 +39,7 @@
 #include <list>
 #include <cmath>
 #include <stdexcept>
-#include <kdl/expressiontree_traits.hpp>
+#include "expressiontree_traits.hpp"
 
 // colorscheme:
 #define COLOR_OPERATION "\"#5CCCCC\""

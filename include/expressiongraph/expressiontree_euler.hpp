@@ -24,7 +24,7 @@
 #ifndef KDL_EXPRESSIONTREE_EULER_HPP
 #define KDL_EXPRESSIONTREE_EULER_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include "expressiontree_expressions.hpp"
 #include <kdl/expressiontree_rotation.hpp>
 
 

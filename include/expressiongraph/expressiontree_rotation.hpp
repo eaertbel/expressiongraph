@@ -22,9 +22,9 @@
 #ifndef KDL_EXPRESSIONTREE_ROTATION_HPP
 #define KDL_EXPRESSIONTREE_ROTATION_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
-#include <kdl/expressiontree_vector.hpp>
-#include <kdl/expressiontree_double.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_vector.hpp>
+#include <expressiongraph/expressiontree_double.hpp>
 #include <kdl/frames.hpp>
 
 

@@ -19,7 +19,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
 #include <Eigen/Dense>
 #include <map>
 #include <vector>

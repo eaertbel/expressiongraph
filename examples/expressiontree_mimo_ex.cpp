@@ -1,6 +1,6 @@
 // example of a MIMO expressiongraph node:
 // a multiplication by a 2x2 matrix.
-#include <kdl/expressiontree.hpp>
+#include <expressiongraph/expressiontree.hpp>
 #include <fstream>
 
 using namespace KDL;

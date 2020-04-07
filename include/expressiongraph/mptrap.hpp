@@ -24,8 +24,8 @@
 #ifndef KDL_MPTRAP_HPP
 #define KDL_MPTRAP_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
-#include <kdl/expressiontree_mimo.hpp>
+#include "expressiontree_expressions.hpp"
+#include "expressiontree_mimo.hpp"
 #include <stdexcept>
 
 namespace KDL {

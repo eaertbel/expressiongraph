@@ -16,7 +16,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_mimo.hpp>
+#include <expressiongraph/expressiontree_mimo.hpp>
 namespace KDL {
 
 MIMO::MIMO() {}

@@ -24,7 +24,7 @@
 #ifndef KDL_EXPRESSIONTREE_MOTPROF_TRAP_HPP
 #define KDL_EXPRESSIONTREE_MOTPROF_TRAP_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
 #include <algorithm>
 
 namespace KDL {

@@ -23,8 +23,7 @@
 
 #include <kdl/frames.hpp>
 #include <kdl/frames_io.hpp>
-#include <kdl/conversions.hpp>
-#include <kdl/conversions.hpp>
+#include <expressiongraph/conversions.hpp>
 
 /*
  * This small example show the conversion between Eigen types and KDL types

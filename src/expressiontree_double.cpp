@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_double.hpp>
+#include <expressiongraph/expressiontree_double.hpp>
 #include <iostream>
 #include "util.hpp"
 

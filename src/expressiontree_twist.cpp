@@ -21,9 +21,9 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree_vector.hpp>
-#include <kdl/expressiontree_rotation.hpp>
-#include <kdl/expressiontree_twist.hpp>
+#include <expressiongraph/expressiontree_vector.hpp>
+#include <expressiongraph/expressiontree_rotation.hpp>
+#include <expressiongraph/expressiontree_twist.hpp>
 #include <kdl/frames.hpp>
 
 namespace KDL {

@@ -24,9 +24,9 @@
 #ifndef KDL_EXPRESSIONTREE_MOTPROFILES_HPP
 #define KDL_EXPRESSIONTREE_MOTPROFILES_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
-#include <kdl/expressiontree_mimo.hpp>
-#include <kdl/mptrap.hpp>
+#include "expressiontree_expressions.hpp"
+#include "expressiontree_mimo.hpp"
+#include "mptrap.hpp"
 #include <stdexcept>
 
 namespace KDL {

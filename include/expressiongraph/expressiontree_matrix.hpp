@@ -22,7 +22,7 @@
 #ifndef KDL_EXPRESSIONTREE_MATRIX_HPP
 #define KDL_EXPRESSIONTREE_MATRIX_HPP
 
-#include <kdl/expressiontree_expressions.hpp>
+#include <expressiongraph/expressiontree_expressions.hpp>
 #include <Eigen/Core>
 
 
