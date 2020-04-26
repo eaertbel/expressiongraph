@@ -24,8 +24,7 @@
 
 #include <expressiongraph/expressiontree.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
-
+#include <chrono>
 /*
  * An example that investigates the computation time of expression tree's.
  * takes a 30 dof kin chain and some additional expressions and evaluates
@@ -91,7 +90,7 @@ int main(int argc, char* argv[]) {
     Expression<Vector>::Ptr tmp = cached<Vector>( Constant(line.Inverse()) * origin(kinchain) );
     Expression<double>::Ptr distance_to_line = sqrt( coord_x(tmp)*coord_x(tmp) + coord_z(tmp)*coord_z(tmp) );
     std::cout << "numer of derivatives " << distance_to_line->number_of_derivatives() << std::endl;
-    boost::timer timer;
+    auto start_time =std::chrono::steady_clock::now();
     int N = 100000;
     std::vector<double> joints(distance_to_line->number_of_derivatives());
     for (int n=0;n<N;++n) {
@@ -112,8 +111,11 @@ int main(int argc, char* argv[]) {
             distance_to_line->derivative(i);
         }
     } 
+    auto end_time =std::chrono::steady_clock::now();
+    std::chrono::duration<double,micro> sec=end_time-start_time;
+
     cout << "time per evaluation in microseconds : "
-              << timer.elapsed()*1000000.0/N << " us " << endl;
+              << sec.count()/N << " us " << endl;
     std::ofstream of("expressiontree_example5.dot");
     distance_to_line->write_dotfile(of);
 	

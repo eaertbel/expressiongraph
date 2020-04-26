@@ -23,7 +23,6 @@
 
 #include <expressiongraph/expressiontree.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
 #include <iostream>
 #include <iomanip>
 

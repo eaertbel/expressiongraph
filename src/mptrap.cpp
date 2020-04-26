@@ -42,6 +42,7 @@ double MPTrap::adaptDuration(double new_duration) {
     duration = new_duration;
     vmax     = vmax * f;
     amax     = amax * f*f;
+    return duration;
 }
 
 /**
