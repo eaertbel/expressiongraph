@@ -28,7 +28,6 @@
 
 #include <expressiongraph/expressiontree.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
 
 int main(int argc, char* argv[]) {
 	using namespace KDL;

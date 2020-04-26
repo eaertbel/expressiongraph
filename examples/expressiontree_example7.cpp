@@ -23,7 +23,6 @@
 
 #include <expressiongraph/expressiontree.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -81,7 +80,6 @@ int main(int argc, char* argv[]) {
     Expression<double>::Ptr distance_to_line2 = sqrt( coord_x(tmp2)*coord_x(tmp2) + coord_z(tmp2)*coord_z(tmp2) );
     std::cout << "numer of derivatives 1 " << distance_to_line1->number_of_derivatives() << std::endl;
     std::cout << "numer of derivatives 2 " << distance_to_line2->number_of_derivatives() << std::endl;
-    boost::timer timer;
     int N = 10;
     std::vector<double> joints(distance_to_line1->number_of_derivatives());
         // specify input values:  

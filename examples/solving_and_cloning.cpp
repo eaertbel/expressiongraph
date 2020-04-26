@@ -36,7 +36,6 @@
 #include <expressiongraph/expressiontree.hpp>
 #include <expressiongraph/expressiontree_var.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
 #include <iostream>
 #include <iomanip>
 

@@ -7,7 +7,6 @@
 
 #include <expressiongraph/expressiontree.hpp>
 #include <fstream>
-#include <boost/timer.hpp>
 
 /*
  * An example that investigates the computation time of expression tree's.
