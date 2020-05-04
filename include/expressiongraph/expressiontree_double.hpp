@@ -1180,6 +1180,22 @@ inline typename Expression<double>::Ptr normaldistributednoise( typename Express
 }
 
 
+extern template class Conditional_double<double>;
+extern template class Conditional_double<Vector>;
+extern template class Conditional_double<Rotation>;
+extern template class Conditional_double<Frame>;
+extern template class Conditional_double<Twist>;
+extern template class Conditional_double<Wrench>;
+extern template class Conditional_double<Quaternion>;
+
+extern template class NearZero_double<double>;
+extern template class NearZero_double<Vector>;
+extern template class NearZero_double<Frame>;
+extern template class NearZero_double<Rotation>;
+extern template class NearZero_double<Twist>;
+extern template class NearZero_double<Wrench>;
+extern template class NearZero_double<Quaternion>;
+
 
 
 } // end of namespace KDL

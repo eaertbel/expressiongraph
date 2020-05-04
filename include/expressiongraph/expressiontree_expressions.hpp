@@ -23,9 +23,9 @@
 #define KDL_EXPRESSIONTREE_EXPRESSIONS_HPP
 
 #include <kdl/frames.hpp>
-#include <kdl/framevel.hpp>
-#include <kdl/stiffness.hpp>
 #include <kdl/frames_io.hpp>
+//#include <kdl/framevel.hpp>
+#include <kdl/stiffness.hpp>
 #include "quat.hpp"
 #include "quat_io.hpp"
 #include <boost/smart_ptr.hpp>
@@ -1850,6 +1850,7 @@ extern template class Expression<Frame>;
 extern template class Expression<Rotation>;
 extern template class Expression<Twist>;
 extern template class Expression<Wrench>;
+extern template class Expression<Quaternion>;
 
 extern template class UnaryExpression<double,double>;
 extern template class UnaryExpression<Vector,Vector>;
@@ -1858,12 +1859,26 @@ extern template class UnaryExpression<Rotation,Rotation>;
 extern template class UnaryExpression<Twist,Twist>;
 extern template class UnaryExpression<Wrench,Wrench>;
 
+extern template class UnaryExpression<Quaternion,Quaternion>;
+extern template class UnaryExpression<double,Quaternion>;
+extern template class UnaryExpression<Vector,Quaternion>;
+extern template class UnaryExpression<Quaternion,Vector>;
+extern template class UnaryExpression<Quaternion,Rotation>;
+extern template class UnaryExpression<Rotation,Quaternion>;
+
 extern template class BinaryExpression<double,double,double>;
 extern template class BinaryExpression<Vector,Vector,Vector>;
 extern template class BinaryExpression<Rotation,Rotation,Rotation>;
 extern template class BinaryExpression<Frame,Frame,Frame>;
 extern template class BinaryExpression<Twist,Twist,Twist>;
 extern template class BinaryExpression<Wrench,Wrench,Wrench>;
+extern template class BinaryExpression<Quaternion,Quaternion,Quaternion>;
+
+extern template class BinaryExpression<Quaternion,Quaternion,Vector>;
+extern template class BinaryExpression<Quaternion,Vector,Quaternion>;
+extern template class BinaryExpression<double,Quaternion,Quaternion>;
+extern template class BinaryExpression<Vector,Quaternion,Vector>;
+extern template class BinaryExpression<Quaternion,double,Vector>;
 
 
 extern template class TernaryExpression<double,double,double,double>;
@@ -1876,6 +1891,7 @@ extern template class FunctionType<Rotation>;
 extern template class FunctionType<Frame>;
 extern template class FunctionType<Twist>;
 extern template class FunctionType<Wrench>;
+extern template class FunctionType<Quaternion>;
 
 extern template class ConstantType<double>;
 extern template class ConstantType<Vector>;
@@ -1883,6 +1899,7 @@ extern template class ConstantType<Rotation>;
 extern template class ConstantType<Frame>;
 extern template class ConstantType<Twist>;
 extern template class ConstantType<Wrench>;
+extern template class ConstantType<Quaternion>;
 
 
 extern template class CachedType<double>;
@@ -1891,30 +1908,17 @@ extern template class CachedType<Rotation>;
 extern template class CachedType<Frame>;
 extern template class CachedType<Twist>;
 extern template class CachedType<Wrench>;
+extern template class CachedType<Quaternion>;
 
 
-/*
 extern template class MakeConstantType<double>;
 extern template class MakeConstantType<Vector>;
 extern template class MakeConstantType<Rotation>;
 extern template class MakeConstantType<Frame>;
 extern template class MakeConstantType<Twist>;
 extern template class MakeConstantType<Wrench>;
+extern template class MakeConstantType<Quaternion>;
 
-extern template class Conditional_double<double>;
-extern template class Conditional_double<Vector>;
-extern template class Conditional_double<Rotation>;
-extern template class Conditional_double<Frame>;
-extern template class Conditional_double<Twist>;
-extern template class Conditional_double<Wrench>;
-
-extern template class NearZero_double<double>;
-extern template class NearZero_double<Vector>;
-extern template class NearZero_double<Frame>;
-extern template class NearZero_double<Rotation>;
-extern template class NearZero_double<Twist>;
-extern template class NearZero_double<Wrench>;
-*/
 
 
 } // end of namespace KDL

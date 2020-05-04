@@ -232,4 +232,21 @@ namespace KDL {
 
 boost::mt19937 rng; 
 
+template class Conditional_double<double>;
+template class Conditional_double<Vector>;
+template class Conditional_double<Rotation>;
+template class Conditional_double<Frame>;
+template class Conditional_double<Twist>;
+template class Conditional_double<Wrench>;
+template class Conditional_double<Quaternion>;
+
+template class NearZero_double<double>;
+template class NearZero_double<Vector>;
+template class NearZero_double<Frame>;
+template class NearZero_double<Rotation>;
+template class NearZero_double<Twist>;
+template class NearZero_double<Wrench>;
+template class NearZero_double<Quaternion>;
+
+
 } // end of namespace KDL

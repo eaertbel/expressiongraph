@@ -199,6 +199,7 @@ template class Expression<Frame>;
 template class Expression<Rotation>;
 template class Expression<Twist>;
 template class Expression<Wrench>;
+template class Expression<Quaternion>;
 
 
 template class UnaryExpression<double,double>;
@@ -207,6 +208,12 @@ template class UnaryExpression<Frame,Frame>;
 template class UnaryExpression<Rotation,Rotation>;
 template class UnaryExpression<Twist,Twist>;
 template class UnaryExpression<Wrench,Wrench>;
+template class UnaryExpression<Quaternion,Quaternion>;
+template class UnaryExpression<double,Quaternion>;
+template class UnaryExpression<Vector,Quaternion>;
+template class UnaryExpression<Quaternion,Vector>;
+template class UnaryExpression<Quaternion,Rotation>;
+template class UnaryExpression<Rotation,Quaternion>;
 
 template class BinaryExpression<double,double,double>;
 template class BinaryExpression<Vector,Vector,Vector>;
@@ -214,6 +221,14 @@ template class BinaryExpression<Rotation,Rotation,Rotation>;
 template class BinaryExpression<Frame,Frame,Frame>;
 template class BinaryExpression<Twist,Twist,Twist>;
 template class BinaryExpression<Wrench,Wrench,Wrench>;
+template class BinaryExpression<Quaternion,Quaternion,Quaternion>;
+
+template class BinaryExpression<Quaternion,Quaternion,Vector>;
+template class BinaryExpression<Quaternion,Vector,Quaternion>;
+template class BinaryExpression<double,Quaternion,Quaternion>;
+template class BinaryExpression<Vector,Quaternion,Vector>;
+template class BinaryExpression<Quaternion,double,Vector>;
+
 
 
 template class TernaryExpression<double,double,double,double>;
@@ -226,6 +241,7 @@ template class FunctionType<Rotation>;
 template class FunctionType<Frame>;
 template class FunctionType<Twist>;
 template class FunctionType<Wrench>;
+template class FunctionType<Quaternion>;
 
 template class ConstantType<double>;
 template class ConstantType<Vector>;
@@ -233,6 +249,7 @@ template class ConstantType<Rotation>;
 template class ConstantType<Frame>;
 template class ConstantType<Twist>;
 template class ConstantType<Wrench>;
+template class ConstantType<Quaternion>;
 
 
 template class CachedType<double>;
@@ -241,30 +258,15 @@ template class CachedType<Rotation>;
 template class CachedType<Frame>;
 template class CachedType<Twist>;
 template class CachedType<Wrench>;
+template class CachedType<Quaternion>;
 
 
-
-/*template class MakeConstantType<double>;
+template class MakeConstantType<double>;
 template class MakeConstantType<Vector>;
 template class MakeConstantType<Rotation>;
 template class MakeConstantType<Frame>;
 template class MakeConstantType<Twist>;
 template class MakeConstantType<Wrench>;
-
-template class Conditional_double<double>;
-template class Conditional_double<Vector>;
-template class Conditional_double<Rotation>;
-template class Conditional_double<Frame>;
-template class Conditional_double<Twist>;
-template class Conditional_double<Wrench>;
-
-
-template class NearZero_double<double>;
-template class NearZero_double<Vector>;
-template class NearZero_double<Frame>;
-template class NearZero_double<Rotation>;
-template class NearZero_double<Twist>;
-template class NearZero_double<Wrench>;
-*/
+template class MakeConstantType<Quaternion>;
 
 };// namespace KDL

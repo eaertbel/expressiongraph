@@ -115,6 +115,18 @@ struct AutoDiffTrait <KDL::Twist>
 
 };
 
+// Quaternion
+template<>
+    struct AutoDiffTrait<Quaternion> {
+        typedef Quaternion ValueType;
+        typedef Quaternion DerivType;
+        static DerivType zeroDerivative() {
+            return Quaternion( 0.0, Vector::Zero());
+        }
+        const static int size=4;
+    };
+
+
 //Matrix
 template<int n, int m>
 struct AutoDiffTrait<Eigen::Matrix<double, n, m> >

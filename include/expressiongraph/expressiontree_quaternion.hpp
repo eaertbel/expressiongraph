@@ -104,15 +104,6 @@
  */
 
 namespace KDL {
-    template<>
-    struct AutoDiffTrait<Quaternion> {
-        typedef Quaternion ValueType;
-        typedef Quaternion DerivType;
-        static DerivType zeroDerivative() {
-            return Quaternion( 0.0, Vector::Zero());
-        }
-        const static int size=4;
-    };
 
     class Quaternion_conj:
         public UnaryExpression<Quaternion,Quaternion>
