@@ -27,6 +27,19 @@
 
 namespace KDL {
 
+enum class ExpressionType {
+    expression_double    = 0,
+    expression_vector    = 1,
+    expression_rotation  = 2,
+    expression_frame     = 3,
+    expression_twist     = 4,
+    expression_wrench    = 5,
+    expression_quaternion= 6,
+    expression_matrix= 7,
+    unknown   = 999 
+};
+
+
 /**
  * Trait classes
  * Defines relationships between types and some utility methods
@@ -36,21 +49,30 @@ template<typename T>
 struct AutoDiffTrait {
     typedef T ValueType;
     typedef T DerivType;
+    static ValueType zeroValue() {
+        assert(0 /* should never be called, only specialized versions should be called. */); 
+        return 0;
+    }
     static DerivType zeroDerivative() {
         assert(0 /* should never be called, only specialized versions should be called. */); 
         return 0;
     }
     const static int size=0;
+    const static ExpressionType expr_type = ExpressionType::unknown;
 };
 
 template<>
 struct AutoDiffTrait<double> {
     typedef double ValueType;
     typedef double DerivType;
+    static ValueType zeroValue() {
+        return 0;
+    }
     static DerivType zeroDerivative() {
         return 0;
     }
     const static int size=1;
+    const static ExpressionType expr_type = ExpressionType::expression_double;
 };
 
 template<>
@@ -58,11 +80,14 @@ struct AutoDiffTrait<KDL::Vector>
 {
     typedef KDL::Vector ValueType;
     typedef KDL::Vector DerivType;
+    static ValueType zeroValue() {
+        return KDL::Vector::Zero();
+    }
     static DerivType zeroDerivative() {
         return KDL::Vector::Zero();
     }
     const static int size=3;
-
+    const static ExpressionType expr_type = ExpressionType::expression_vector;
 };
 
 template<>
@@ -70,10 +95,14 @@ struct AutoDiffTrait <KDL::Rotation>
 {
     typedef KDL::Rotation ValueType;
     typedef KDL::Vector DerivType;
+    static ValueType zeroValue() {
+        return KDL::Rotation::Identity();
+    }
     static DerivType zeroDerivative() {
         return KDL::Vector::Zero();
     }
     const static int size=3;
+    const static ExpressionType expr_type = ExpressionType::expression_rotation;
 };
 
 //Frame
@@ -82,11 +111,14 @@ struct AutoDiffTrait <KDL::Frame>
 {
     typedef KDL::Frame ValueType;
     typedef KDL::Twist DerivType;
+    static ValueType zeroValue() {
+        return KDL::Frame::Identity();
+    }
     static DerivType zeroDerivative() {
         return KDL::Twist::Zero();
     }
     const static int size=6;
-
+    const static ExpressionType expr_type = ExpressionType::expression_frame;
 };
 
 //Wrench
@@ -95,10 +127,14 @@ struct AutoDiffTrait <KDL::Wrench>
 {
     typedef KDL::Wrench ValueType;
     typedef KDL::Wrench DerivType;
+    static ValueType zeroValue() {
+        return KDL::Wrench::Zero();
+    }
     static DerivType zeroDerivative() {
         return KDL::Wrench::Zero();
     }
     const static int size=6;
+    const static ExpressionType expr_type = ExpressionType::expression_wrench;
 
 };
 
@@ -108,11 +144,14 @@ struct AutoDiffTrait <KDL::Twist>
 {
     typedef KDL::Twist ValueType;
     typedef KDL::Twist DerivType;
+    static ValueType zeroValue() {
+        return KDL::Twist::Zero();
+    }
     static DerivType zeroDerivative() {
         return KDL::Twist::Zero();
     }
     const static int size=6;
-
+    const static ExpressionType expr_type = ExpressionType::expression_twist;
 };
 
 // Quaternion
@@ -120,10 +159,14 @@ template<>
     struct AutoDiffTrait<Quaternion> {
         typedef Quaternion ValueType;
         typedef Quaternion DerivType;
+        static ValueType zeroValue() {
+            return Quaternion( 0.0, Vector::Zero());
+        }
         static DerivType zeroDerivative() {
             return Quaternion( 0.0, Vector::Zero());
         }
         const static int size=4;
+        const static ExpressionType expr_type = ExpressionType::expression_quaternion;
     };
 
 
@@ -133,10 +176,14 @@ struct AutoDiffTrait<Eigen::Matrix<double, n, m> >
 {
     typedef Eigen::Matrix<double,n,m> ValueType;
     typedef Eigen::Matrix<double,n,m> DerivType;
+    static ValueType zeroValue() {
+        return Eigen::Matrix<double,n,m>::Zero();
+    }
     static DerivType zeroDerivative() {
         return Eigen::Matrix<double,n,m>::Zero();
     }
     const static int size=n*m;
+    const static ExpressionType expr_type = ExpressionType::expression_matrix;
 
 };
 

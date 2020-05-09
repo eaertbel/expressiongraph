@@ -68,6 +68,47 @@ public:
 };
 
 
+class FunctionException : public std::logic_error
+{
+    char msg[512];
+public:
+    FunctionException(const std::string& funcname= __PRETTY_FUNCTION__) : 
+        std::logic_error(std::string(funcname)) { 
+    };
+};
+
+class BodyWrongTypeException : public FunctionException 
+{
+    char msg[512];
+public:
+    BodyWrongTypeException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Type of function body does not correspond to expressiongraph function definition") { 
+    };
+};
+
+class ArgumentWrongTypeException : public FunctionException 
+{
+    char msg[512];
+public:
+    ArgumentWrongTypeException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Type of function argument does not correspond to expressiongraph function definition") { 
+    };
+};
+
+class ArgumentNameException : public FunctionException 
+{
+    char msg[512];
+public:
+    ArgumentNameException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Unknown name for argument") { 
+    };
+};
+
+class ArgumentIndexException : public FunctionException 
+{
+    char msg[512];
+public:
+    ArgumentIndexException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Unknown index for argument or wrong number of arguments") { 
+    };
+};
+
 
 class ExpressionOptimizer;
 
@@ -103,6 +144,7 @@ inline void write_dotfile_end(std::ostream& of) {
 
 template <typename T>
 class Expression;
+
 
 /**
  * Definition of all methods of Expression<T> whose interface does not depend on T.
@@ -264,14 +306,17 @@ public:
 
     virtual void write_dotfile_init() = 0;
 
+    virtual int number_of_derivatives() = 0;
     /**
      * if the expression is a scalar variable (i.e. InputType object) this
      * method will return the variable index number.
      * Otherwise it returns -1.
      */
     virtual int isScalarVariable() = 0;
+    
+    virtual ExpressionType getResultType() = 0;
 
-
+    virtual boost::shared_ptr< ExpressionBase> cloneBase() = 0; 
 
     virtual ~ExpressionBase() {}
 };
@@ -362,6 +407,10 @@ public:
      * makes a deep copy of the expression.
      */
     virtual boost::shared_ptr<Expression<ResultType> > clone() = 0;
+    virtual boost::shared_ptr< ExpressionBase> cloneBase() {
+        return clone();
+    } 
+
 
     virtual void debug_printtree() {
         std::cout << name;
@@ -408,6 +457,10 @@ public:
 
     virtual int isScalarVariable() {
         return -1;
+    }
+
+    virtual ExpressionType getResultType() {
+        return AutoDiffTrait<ResultType>::expr_type;
     }
 
     virtual ~Expression() {
@@ -865,7 +918,7 @@ public:
 
     FunctionType():dot_already_written(false) {}
     FunctionType(const std::string& name):
-        Expression<_ResultType>(name) {}
+        Expression<_ResultType>(name),dot_already_written(false) {}
 
     virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
         return typename Expression<Frame>::Ptr();
@@ -1810,6 +1863,58 @@ inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a 
             return a;
         }
 }
+
+/*
+inline ExpressionBase::Ptr checkConstant(typename ExpressionBase::Ptr a) {
+        if (!a) {
+            throw NullPointerException();
+        }
+        std::set<int> vset;
+        a->getDependencies(vset);
+        if (vset.empty()) {
+            switch (a->getResultType()) {
+                case ExpressionType::expression_double: {
+                    Expression<double>::Ptr p = boost::dynamic_pointer_cast<Expression<double> >(a);
+                    return Constant<double>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_vector: {
+                    Expression<Vector>::Ptr p = boost::dynamic_pointer_cast<Expression<Vector> >(a);
+                    return Constant<Vector>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_rotation: {
+                    Expression<Rotation>::Ptr p = boost::dynamic_pointer_cast<Expression<Rotation> >(a);
+                    return Constant<Rotation>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_frame: {
+                    Expression<Frame>::Ptr p = boost::dynamic_pointer_cast<Expression<Frame> >(a);
+                    return Constant<Frame>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_twist: {
+                    Expression<Twist>::Ptr p = boost::dynamic_pointer_cast<Expression<Twist> >(a);
+                    return Constant<Twist>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_wrench: {
+                    Expression<Wrench>::Ptr p = boost::dynamic_pointer_cast<Expression<Wrench> >(a);
+                    return Constant<Wrench>( p->value() );
+                    break;
+                }
+                case ExpressionType::expression_quaternion: {
+                    Expression<Quaternion>::Ptr p = boost::dynamic_pointer_cast<Expression<Quaternion> >(a);
+                    return Constant<Quaternion>( p->value() );
+                    break;
+                }
+                default:
+            }
+        } else {
+            return a;
+        }
+}
+*/
 
 template<typename T>
 inline bool isConstant( typename Expression<T>::Ptr a) {
