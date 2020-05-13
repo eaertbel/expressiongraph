@@ -32,7 +32,7 @@ namespace KDL {
     /*                 FunctionDefinition                              */
     /*-----------------------------------------------------------------*/
 
-    FunctionDefinition::FunctionDefinition() {
+    FunctionDefinition::FunctionDefinition(const std::string& _name):name(_name) {
         // push the default arguments, such that the parameters
         // always point to something that doesn't cause a segmentation 
         // error.

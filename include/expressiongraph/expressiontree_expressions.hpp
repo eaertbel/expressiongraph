@@ -109,6 +109,15 @@ public:
     };
 };
 
+class WrongNumberOfArgumentsException : public FunctionException 
+{
+    char msg[512];
+public:
+    WrongNumberOfArgumentsException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : function has the wrong number of arguments") { 
+    };
+};
+
+
 
 class ExpressionOptimizer;
 

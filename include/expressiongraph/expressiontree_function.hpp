@@ -20,7 +20,7 @@
 */
 
 #include "expressiontree_expressions.hpp"
-#include "expressiontree_n_ary.hpp"
+//#include "expressiontree_n_ary.hpp"
 #include <string> 
 #include <boost/variant.hpp>
 #include <unordered_map>
@@ -30,6 +30,7 @@
 namespace KDL { 
    
 
+    typedef std::vector<ExpressionBase::Ptr> Arguments;
 
     class FunctionDefinition {
             std::string name;
@@ -42,7 +43,7 @@ namespace KDL {
         public:
             typedef boost::shared_ptr<FunctionDefinition > Ptr;
 
-            FunctionDefinition();
+            FunctionDefinition(const std::string& name);
             virtual void setName(const std::string& name);
             virtual std::string getName() const;
 
@@ -64,7 +65,7 @@ namespace KDL {
                 if (AutoDiffTrait<T>::expr_type != body_expr->getResultType()) {
                     return nullptr;
                 } else {
-                    return dynamic_pointer_cast< Expression<T> >( body_expr);
+                    return boost::dynamic_pointer_cast< Expression<T> >( body_expr);
                 }
             }
             virtual ~FunctionDefinition(){}
@@ -94,15 +95,15 @@ namespace KDL {
                 }
            }
            virtual ResultType value() {
-                std::cout << "FunctionParameter::value() for  " << this->name << " started" << std::endl;
-                typename Expression<T>::Ptr e = dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                //std::cout << "FunctionParameter::value() for  " << this->name << " started" << std::endl;
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 assert(e!=nullptr);
                 ResultType retval = e->value();
-                std::cout << "FunctionParameter::value() for  " << this->name << " finished and returns " << retval << std::endl;
+                //std::cout << "FunctionParameter::value() for  " << this->name << " finished and returns " << retval << std::endl;
                 return retval;
            }
            virtual DerivType derivative(int i) {
-                typename Expression<T>::Ptr e = dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 assert(e!=nullptr);
                 return e->derivative(i);
            }
@@ -119,12 +120,12 @@ namespace KDL {
            virtual void setInputValues(const std::vector<double>& values) {
             }
            virtual void setInputValue(int variable_number, double val) {
-                std::cout << "FunctionParameter::setInputValue() for  " << this->name << " was called" << std::endl;
+                //std::cout << "FunctionParameter::setInputValue() for  " << this->name << " was called" << std::endl;
             }
            virtual void setInputValue(int variable_number, const Rotation& val){}
            virtual void update_variabletype_from_original(){}
            virtual int number_of_derivatives(){
-                typename Expression<T>::Ptr e = dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 assert( e  );
                 return e->number_of_derivatives();
             } 
@@ -136,6 +137,7 @@ namespace KDL {
            ~FunctionParameter() {} 
     };
 
+
     /**
      * returns nullpointer if parameter name does not exist for this definition.
      *
@@ -146,7 +148,7 @@ namespace KDL {
  
     /**
      * returns nullpointer if parameter name does not exist for this definition.
-     */
+     *
     template<typename T>
     typename Expression<T>::Ptr functionParameter( 
         FunctionDefinition::Ptr definition, 
@@ -156,7 +158,15 @@ namespace KDL {
         if (ndx<0) return nullptr;
         return boost::make_shared< FunctionParameter<T> >( definition, ndx );
     }
-   
+    */
+ 
+    template<typename T>
+    typename Expression<T>::Ptr make_parameter(FunctionDefinition::Ptr definition, const std::string& name ) {
+        definition->addParam( name, AutoDiffTrait<T>::expr_type);
+        int ndx=definition->getParamNdx(name);
+        return boost::make_shared< FunctionParameter<T> >( definition, ndx );
+    } 
+  
 
     template<typename T>
     class FunctionEvaluation: public Expression<T> {
@@ -181,6 +191,24 @@ namespace KDL {
                 body_expr = _definition->get_body_expression<T>(); 
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
+                }
+            }
+
+            FunctionEvaluation(FunctionDefinition::Ptr _definition, std::initializer_list<ExpressionBase::Ptr> list):
+                 Expression<T>(_definition->getName()),
+                 definition( _definition ),
+                 arguments(  _definition->getNrOfParam() )
+            {
+                body_expr = _definition->get_body_expression<T>(); 
+                if (body_expr==nullptr) {
+                    throw BodyWrongTypeException();
+                }
+                int idx=0;
+                for (auto it = list.begin(); it != list.end(); ++it) {
+                    //std::cout << "adding argument " << idx << "  ";
+                    //(*it)->print(std::cout);
+                    //std::cout << std::endl;
+                    addTypeCheckedArgument(idx, *it);idx++;
                 }
             }
 
@@ -211,14 +239,14 @@ namespace KDL {
             }
      
             virtual ResultType value() {
-                std::cout << "FunctionEvaluation:value() started on ";
-                this->print(std::cout);
-                std::cout << std::endl;
+                //std::cout << "FunctionEvaluation:value() started on ";
+                //this->print(std::cout);
+                //std::cout << std::endl;
                 definition->pushArgStack( &arguments );     
                 body_expr->update_variabletype_from_original(); // invalidate all cache
                 ResultType result = body_expr->value();
                 definition->popArgStack();
-                std::cout << "FunctionEvaluation:value() finished" << std::endl;
+                //std::cout << "FunctionEvaluation:value() finished with result=" << result << std::endl;
                 return result;
             }
 
@@ -253,14 +281,14 @@ namespace KDL {
             }
 
             virtual void setInputValue(int variable_number, double val) {
-                std::cout << "FunctionEvaluation:setInputValue started on ";
-                this->print(std::cout);
-                std::cout << std::endl;
+                //std::cout << "FunctionEvaluation:setInputValue started on ";
+                //this->print(std::cout);
+                //std::cout << std::endl;
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->setInputValue(variable_number,val); 
                 }
                 body_expr->setInputValue(variable_number,val);
-                std::cout << "FunctionEvaluation:setInputValue finished" << std::endl;
+                //std::cout << "FunctionEvaluation:setInputValue finished" << std::endl;
             }
 
             virtual void setInputValue(int variable_number, const Rotation& val) {

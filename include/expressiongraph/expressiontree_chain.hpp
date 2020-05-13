@@ -30,7 +30,6 @@
 
 namespace KDL {
 
-
 /**
  * provides a mapping of a KDL::Chain to an ExpressionTree.
  */
@@ -127,11 +126,6 @@ public:
 
 };
 
-inline Expression<Frame>::Ptr kinematic_chain(const Chain& chain, int index_of_first_joint ) {
-	Expression<Frame>::Ptr expr( new Expression_Chain( chain, index_of_first_joint ) );
-    return expr;
-}
-
 class Expression_Chain_Derivative:
     public FunctionType<Twist>
 {
@@ -159,6 +153,9 @@ public:
 
     friend class Expression_Chain;
 };
+
+Expression<Frame>::Ptr kinematic_chain(const Chain& chain, int index_of_first_joint );
+
 
 
 

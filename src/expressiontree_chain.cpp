@@ -25,6 +25,12 @@
 #include <iostream>
 namespace KDL {
 
+Expression<Frame>::Ptr kinematic_chain(const Chain& chain, int index_of_first_joint ) {
+	Expression<Frame>::Ptr expr( new Expression_Chain( chain, index_of_first_joint ) );
+    return expr;
+}
+
+
 
 Expression_Chain::Expression_Chain( const Chain& _chain, int _index_of_first_joint ):
     FunctionType("kinematic_chain"),
