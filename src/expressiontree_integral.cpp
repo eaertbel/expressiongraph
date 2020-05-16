@@ -71,6 +71,7 @@ namespace KDL {
             virtual void setInputValue(int variable_number, double val);
             virtual void setInputValue(int variable_number, const Rotation& val);
             virtual int number_of_derivatives();
+            virtual void resize_nr_of_derivatives();
             virtual void update_variabletype_from_original();
 /*
             virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name);
@@ -262,6 +263,11 @@ namespace KDL {
         });
     } 
 
+    void IntegralNode::resize_nr_of_derivatives() {
+        func_eval->resize_nr_of_derivatives();
+        lower->number_of_derivatives();
+        upper->number_of_derivatives();
+    }
     void IntegralNode::update_variabletype_from_original() {
         func_eval->update_variabletype_from_original();
         lower->update_variabletype_from_original();

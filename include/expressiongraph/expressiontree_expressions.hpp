@@ -247,6 +247,14 @@ public:
     virtual void write_dotfile_init() = 0;
 
     virtual int number_of_derivatives() = 0;
+
+    /**
+     * resize datastructures (CachedType) when the number of derivatives has changed.
+     * (Only increases the number of derivatives)
+     * Necessary because of binding of the function arguments when calling an
+     * expressiongraph function can cause the number of derivatives to change.
+     */
+    virtual void resize_nr_of_derivatives() = 0;
     /**
      * if the expression is a scalar variable (i.e. InputType object) this
      * method will return the variable index number.
@@ -337,6 +345,13 @@ public:
      */
     virtual int number_of_derivatives() = 0;
 
+    /**
+     * resizes the data structure of some of the nodes to accomodate a change in
+     * the number of derivatives.  Necessary for expressiongraph functions where
+     * the binding of arguments can change the number of derivatives.  This changes
+     * the CachedType nodes and possibly others.
+     */
+    virtual void resize_nr_of_derivatives() = 0;
 
     virtual typename Expression<DerivType>::Ptr derivativeExpression(int i) {
         throw NotImplementedException();
@@ -440,6 +455,9 @@ public:
     virtual int number_of_derivatives() {
         return argument->number_of_derivatives();
     } 
+    virtual void resize_nr_of_derivatives() {
+        argument->resize_nr_of_derivatives();
+    }
 
     virtual Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
         return argument->subExpression_Frame(name);
@@ -541,6 +559,11 @@ public:
         int n2 = argument2->number_of_derivatives();
         return n1 > n2 ? n1 : n2;
     } 
+    virtual void resize_nr_of_derivatives() {
+        argument1->resize_nr_of_derivatives();
+        argument2->resize_nr_of_derivatives();
+    }
+
 
     virtual Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
         typename Expression<Frame>::Ptr a;
@@ -701,6 +724,12 @@ public:
         return std::max(n1,std::max(n2,n3));
  
     } 
+    virtual void resize_nr_of_derivatives() {
+        argument1->resize_nr_of_derivatives();
+        argument2->resize_nr_of_derivatives();
+        argument3->resize_nr_of_derivatives();
+    }
+
 
     virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
         typename Expression<Frame>::Ptr a;
@@ -993,7 +1022,11 @@ public:
 
     virtual int number_of_derivatives() {
         return 0;
+    }   
+    virtual void resize_nr_of_derivatives() {
     }
+
+
     virtual void print(std::ostream& os) const {
         detail::print(os,val);
     }
@@ -1095,6 +1128,9 @@ public:
     virtual int number_of_derivatives() {
         return variable_number+1;
     };
+    virtual void resize_nr_of_derivatives() {}
+
+
 
     virtual int isScalarVariable() {
         return variable_number;
@@ -1213,7 +1249,8 @@ public:
     virtual int number_of_derivatives() {
         return variable_number+3;
     };
-
+    virtual void resize_nr_of_derivatives() {}
+ 
     /**
      * \warn  Default value for the cloned object will be the value of the original InputType object.
      */
@@ -1397,7 +1434,17 @@ public:
     }
 
     virtual int number_of_derivatives() {
-        return argument->number_of_derivatives();
+        return deriv.size();
+    }
+
+    virtual void resize_nr_of_derivatives() {
+       argument->resize_nr_of_derivatives();
+        int new_size = std::max( (int)deriv.size(), argument->number_of_derivatives() );
+        cached_deriv.resize(new_size);
+        deriv.resize(new_size);
+        #ifdef EG_LOG_CACHE
+            std::cerr<<"CachedType " << this->cached_name << " : resize_nr_of_derivatives() to " << new_size << std::endl;
+        #endif
     }
 
     virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {

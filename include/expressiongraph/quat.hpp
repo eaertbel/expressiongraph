@@ -412,6 +412,9 @@ namespace KDL {
         }
         return q;
     }
-
+    
+    inline bool operator==(const Quaternion& q1, const Quaternion& q2) {
+        return (q1.w==q2.w) && (q1.vec == q2.vec);
+    }
 } // namespace KDL
 #endif 

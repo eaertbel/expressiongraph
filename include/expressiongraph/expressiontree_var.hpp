@@ -151,6 +151,7 @@ public:
     virtual int number_of_derivatives() {
         return maxderiv;
     }
+    virtual void resize_nr_of_derivatives() {}
 
     /**
      * if you clone an expression with a VariableType in it, also the VariableType

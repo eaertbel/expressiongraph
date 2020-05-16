@@ -119,6 +119,9 @@ public:
         return _number_of_derivatives;
     }
 
+    virtual void resize_nr_of_derivatives() {
+    }
+
     virtual  Expression_Chain::Ptr clone();
 
     //virtual void write_dotfile_helper(std::ostream& of, size_t& thisnode, size_t& counter);
@@ -147,6 +150,7 @@ public:
     virtual int number_of_derivatives() { 
         return argument->number_of_derivatives();
     }
+    virtual void resize_nr_of_derivatives() {}
     virtual void update_variabletype_from_original() {}
 
     virtual Expression<Twist>::Ptr clone();

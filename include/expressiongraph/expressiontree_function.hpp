@@ -27,8 +27,7 @@
 #include <map>
 #include <vector>
 
-namespace KDL { 
-   
+namespace KDL {
 
     typedef std::vector<ExpressionBase::Ptr> Arguments;
 
@@ -149,6 +148,14 @@ namespace KDL {
                 EG_ASSERT( e  );
                 return e->number_of_derivatives();
             } 
+            virtual void resize_nr_of_derivatives() {
+               typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                e->resize_nr_of_derivatives();
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter " << this->name << " resize_nr_of_derivatives to " <<  e->number_of_derivatives() << " of ";
+                    e->print(std::cerr); std::cerr << e << std::endl; 
+                #endif
+            }
   
            virtual typename Expression<T>::Ptr clone() {
                 return  boost::make_shared< FunctionParameter<T> >(this->definition, this->index);
@@ -218,15 +225,12 @@ namespace KDL {
                  definition( _definition ),
                  arguments(  _definition->getNrOfParam() )
             {
-                body_expr = _definition->get_body_expression<T>(); 
+                body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
                 }
                 int idx=0;
                 for (auto it = list.begin(); it != list.end(); ++it) {
-                    //std::cout << "adding argument " << idx << "  ";
-                    //(*it)->print(std::cout);
-                    //std::cout << std::endl;
                     addTypeCheckedArgument(idx, *it);idx++;
                 }
             }
@@ -330,6 +334,16 @@ namespace KDL {
                 n = std::max( n, body_expr->number_of_derivatives() ); 
                 return n;
             } 
+
+            virtual void resize_nr_of_derivatives() {
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionEvaluation " << this->name << " resize_nr_of_derivatives" << std::endl; 
+                #endif
+                for (unsigned int i=0;i<arguments.size();++i) {
+                    arguments[i]->resize_nr_of_derivatives(); 
+                }
+                body_expr->resize_nr_of_derivatives();
+            }
 
             virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
                 typename Expression<Frame>::Ptr a;

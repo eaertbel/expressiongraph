@@ -82,6 +82,18 @@ int MIMO::number_of_derivatives() {
         }
         return n;
 } 
+void MIMO::resize_nr_of_derivatives() {
+        int n=0;
+        for (size_t i=0;i<inputDouble.size();++i) {
+            inputDouble[i]->resize_nr_of_derivatives();
+        }
+        for (size_t i=0;i<inputFrame.size();++i) {
+            inputFrame[i]->resize_nr_of_derivatives();
+        }
+        for (size_t i=0;i<inputTwist.size();++i) {
+            inputTwist[i]->resize_nr_of_derivatives();
+        }
+}
 
 Expression<Frame>::Ptr MIMO::subExpression_Frame(const std::string& name) {
     for (size_t i=0;i<inputDouble.size();++i) {
