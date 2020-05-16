@@ -51,6 +51,7 @@ public:
     virtual void setInputValue(int variable_number, const Rotation& val);
     
     virtual int number_of_derivatives();
+    virtual void resize_nr_of_derivatives();
 
     virtual Expression<Frame>::Ptr subExpression_Frame(const std::string& name);
     virtual  Expression<Rotation>::Ptr subExpression_Rotation(const std::string& name);
@@ -118,7 +119,11 @@ public:
 
     virtual int number_of_derivatives() {
         return mimo->number_of_derivatives();
-    } 
+    }     
+    virtual void resize_nr_of_derivatives() {
+        return mimo->resize_nr_of_derivatives();
+    }
+
 
     virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
         return mimo->subExpression_Frame(name);
