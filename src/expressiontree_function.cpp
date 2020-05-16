@@ -19,6 +19,15 @@
 #include <expressiongraph/expressiontree_function.hpp>
 namespace KDL {
 
+    std::ostream& operator<< (std::ostream& os, const FunctionDefinition& arg) {
+        os << "FunctionDefinition "<<arg.getName()<< "(";
+        for (int i=0;i<arg.getNrOfParam();++i) {
+            if (i!=0) os << ",";
+            os << arg.getParamName(i);
+        }
+        os << ")";
+        return os;
+    }
 
     template <typename T>
     void add_if_type( Arguments& args, ExpressionType vartype) {

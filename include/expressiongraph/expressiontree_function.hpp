@@ -190,14 +190,6 @@ namespace KDL {
         return boost::make_shared< FunctionParameter<T> >( definition, ndx );
     }
     */
- 
-    template<typename T>
-    typename Expression<T>::Ptr make_parameter(FunctionDefinition::Ptr definition, const std::string& name ) {
-        definition->addParam( name, AutoDiffTrait<T>::expr_type);
-        int ndx=definition->getParamNdx(name);
-        return boost::make_shared< FunctionParameter<T> >( definition, ndx );
-    } 
-  
 
     template<typename T>
     class FunctionEvaluation: public Expression<T> {
@@ -213,7 +205,7 @@ namespace KDL {
             boost::shared_ptr< Expression<T> > body_expr;   // typed copy of definition->body_expr
 
             
-            FunctionEvaluation( 
+            explicit FunctionEvaluation( 
                 FunctionDefinition::Ptr _definition
             ): Expression<T>(_definition->getName()),
                definition( _definition ),
@@ -488,10 +480,35 @@ namespace KDL {
             } 
 
             ~FunctionEvaluation() {
+                //std::cout << "FunctionEvaluation destructed" << std::endl;
             }
     };
+ 
+    template<typename T>
+    typename FunctionParameter<T>::Ptr make_FunctionParameter(FunctionDefinition::Ptr definition, const std::string& name ) {
+        definition->addParam( name, AutoDiffTrait<T>::expr_type);
+        int ndx=definition->getParamNdx(name);
+        return boost::make_shared< FunctionParameter<T> >( definition, ndx );
+    } 
+  
 
+    template<typename T>
+    typename FunctionEvaluation<double>::Ptr make_FunctionEvaluation( 
+                FunctionDefinition::Ptr _definition
+            ) {
+       FunctionEvaluation<double>::Ptr e = boost::make_shared<FunctionEvaluation<double>>(_definition);
+       return e;
+    }
+      
 
+    template<typename T>
+    typename FunctionEvaluation<T>::Ptr make_FunctionEvaluation( 
+                FunctionDefinition::Ptr _definition,
+                std::initializer_list<ExpressionBase::Ptr> list
+            ) {
+       return boost::make_shared<FunctionEvaluation<T>>(_definition, list);
+    }
+      
 
 } // namespace KDL
 #endif
