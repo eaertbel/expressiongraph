@@ -22,6 +22,7 @@
 
 #include <Eigen/Dense>
 #include <kdl/frames.hpp>
+#include <expressiongraph/expressiontree_exceptions.hpp>
 /** @file conversions.hpp 
  *  @brief Conversions to/from KDL types
  */ 
@@ -46,7 +47,7 @@ namespace KDL {
      * The Eigen vector should have a length of 3.
      */
    inline  Vector toKDLVector( const Eigen::VectorXd& arg) {
-        assert( arg.rows()==3 );
+        EG_ASSERT_MSG( arg.rows()==3,"Eigen::VectorXD should have 3 elements for conversion to KDL::Vector" );
         Vector tmp( arg(0), arg(1), arg(2) );
         return tmp;
     }
@@ -77,7 +78,7 @@ namespace KDL {
      * The Eigen vector should have a length of 6.
      */
     inline KDL::Twist toKDLTwist( const Eigen::VectorXd& arg) {
-        assert( arg.rows()==6 );
+        EG_ASSERT_MSG( arg.rows()==6,"Eigen::VectorXD should have 6 elements for conversion to KDL::Twist" );
         Twist tmp( Vector(arg(0), arg(1), arg(2)), Vector( arg(3),arg(4),arg(5)) );
         return tmp;
     }
@@ -109,7 +110,7 @@ namespace KDL {
      * The Eigen vector should have a length of 6.
      */
     inline KDL::Wrench toKDLWrench( const Eigen::VectorXd& arg) {
-        assert( arg.rows()==6 );
+        EG_ASSERT_MSG( arg.rows()==6,"Eigen::VectorXD should have 6 elements for conversion to KDL::Wrench" );
         Wrench tmp( Vector(arg(0), arg(1), arg(2)), Vector( arg(3),arg(4),arg(5)) );
         return tmp;
     }
@@ -145,8 +146,7 @@ namespace KDL {
      * size should be 3 x 3
      */
     inline KDL::Rotation toKDLRotation(const Eigen::MatrixXd& arg) {
-        assert(arg.rows()==3); 
-        assert(arg.cols()==3); 
+        EG_ASSERT_MSG( (arg.rows()==3) && (arg.cols()==3) , "Eigen MatrixXd should be 3x3 for conversion to KDL::Rotation"); 
         KDL::Rotation R( 
                         arg(0,0), arg(0,1), arg(0,2),
                         arg(1,0), arg(1,1), arg(1,2),

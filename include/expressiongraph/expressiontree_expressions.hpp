@@ -34,13 +34,11 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <ostream>
-#include <assert.h>
 #include <set>
 #include <list>
 #include <cmath>
-#include <stdexcept>
 #include "expressiontree_traits.hpp"
-
+#include "expressiontree_exceptions.hpp"
 // colorscheme:
 #define COLOR_OPERATION "\"#5CCCCC\""
 #define COLOR_CACHED    "\"#FF7400\""
@@ -50,73 +48,6 @@
 typedef uintptr_t  pnumber;
 
 namespace KDL {
-
-
-class NotImplementedException : public std::logic_error
-{
-public:
-    NotImplementedException(const char* funcname= __PRETTY_FUNCTION__): std::logic_error(std::string(funcname) + " : Function not yet implemented") {
-    };
-};
-
-class NullPointerException : public std::logic_error
-{
-    char msg[512];
-public:
-    NullPointerException(const char* funcname= __PRETTY_FUNCTION__) : std::logic_error(std::string(funcname) + " : Null pointer is given as an argument") { 
-    };
-};
-
-
-class FunctionException : public std::logic_error
-{
-    char msg[512];
-public:
-    FunctionException(const std::string& funcname= __PRETTY_FUNCTION__) : 
-        std::logic_error(std::string(funcname)) { 
-    };
-};
-
-class BodyWrongTypeException : public FunctionException 
-{
-    char msg[512];
-public:
-    BodyWrongTypeException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Type of function body does not correspond to expressiongraph function definition") { 
-    };
-};
-
-class ArgumentWrongTypeException : public FunctionException 
-{
-    char msg[512];
-public:
-    ArgumentWrongTypeException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Type of function argument does not correspond to expressiongraph function definition") { 
-    };
-};
-
-class ArgumentNameException : public FunctionException 
-{
-    char msg[512];
-public:
-    ArgumentNameException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Unknown name for argument") { 
-    };
-};
-
-class ArgumentIndexException : public FunctionException 
-{
-    char msg[512];
-public:
-    ArgumentIndexException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : Unknown index for argument or wrong number of arguments") { 
-    };
-};
-
-class WrongNumberOfArgumentsException : public FunctionException 
-{
-    char msg[512];
-public:
-    WrongNumberOfArgumentsException(const std::string& funcname= __PRETTY_FUNCTION__) : FunctionException(std::string(funcname) + " : function has the wrong number of arguments") { 
-    };
-};
-
 
 
 class ExpressionOptimizer;
@@ -185,7 +116,7 @@ public:
      * @param values a vector of values, should be the same size as ndx.
      */
     virtual void setInputValues(const std::vector<int>& ndx,const std::vector<double>& values) {
-        assert(ndx.size()==values.size());
+        EG_ASSERT(ndx.size()==values.size());
         for (size_t i=0;i<ndx.size();++i) {
             setInputValue(ndx[i],values[i]);
         }
@@ -205,7 +136,7 @@ public:
      * @param values a vector of values, should be the same size as ndx.
      */
     virtual void setInputValues(const std::vector<int>& ndx,const Eigen::VectorXd& values) {
-        assert(ndx.size()==(size_t)values.rows());
+        EG_ASSERT(ndx.size()==(size_t)values.rows());
         for (size_t i=0;i<ndx.size();++i) {
             setInputValue(ndx[i],values[i]);
         }
@@ -218,7 +149,7 @@ public:
      * @param values a vector of values, should be the same size as ndx.
      */
     virtual void setInputValues(const std::vector<int>& ndx,const std::vector<Rotation>& values) {
-        assert(ndx.size()==values.size());
+        EG_ASSERT(ndx.size()==values.size());
         for (size_t i=0;i<ndx.size();++i) {
             setInputValue(ndx[i],values[i]);
         }
@@ -1107,7 +1038,7 @@ public:
         FunctionType<double>("input"),
         variable_number(_variable_number),
         val(_defaultvalue) {
-            assert( variable_number >= 0);
+            EG_ASSERT_MSG( variable_number >= 0,"Variable number for InputType should be >=0");
             sprintf(name_buffer,"input(%d)",variable_number);
             name = name_buffer;
     }
@@ -1215,7 +1146,7 @@ public:
         FunctionType<Rotation>("input"),
         variable_number(_variable_number),
         val(_defaultvalue) {
-            assert( variable_number >= 0);
+            EG_ASSERT_MSG( variable_number >= 0,"Variable number for input type should be >=0");
             sprintf(name_buffer,"input(%d)",variable_number);
             name = name_buffer;
     }
@@ -1329,10 +1260,6 @@ inline Expression<Rotation>::Ptr inputRot(int variable_number ) {
    return var;
 }
 
-
-//#define CHECK_CACHE
-
-
 class CachedExpression {
     public:
         virtual void getDependencies(std::set<int>& varset)=0;
@@ -1370,22 +1297,34 @@ public:
         cached_deriv(_argument->number_of_derivatives()),
         cached_value(false),
         cached_name(_name) {
+        #ifdef EG_LOG_CACHE
+            std::cerr << "Constructed CachedType("<<this->cached_name<<")"<<std::endl;
+        #endif
     }
 
     virtual ResultType value() {
+        #ifdef EG_LOG_CACHE
+            std::cerr<<"CachedType " << this->cached_name << " : value() call with cached_value="<<cached_value<<" and val="<<val<<std::endl;
+        #endif
         if (cached_value) {
-            #ifdef CHECK_CACHE
-            assert( val == argument->value() );
+            #ifdef EG_CHECK_CACHE
+                EG_ASSERT_MSG( val == argument->value(),"CHECK ON CachedType FAILED" );
             #endif
             return val;
         } else {
             val          = argument->value();
+            #ifdef EG_LOG_CACHE
+                std::cerr<<"CachedType " << this->cached_name << " : val updated with argument->value()="<< val <<std::endl;
+            #endif
             cached_value = true;
             return val;
         }
     }
 
     virtual void invalidate_cache() {
+        #ifdef EG_LOG_CACHE
+            std::cerr<<"CachedType " << this->cached_name << " invalidate_cache() has been called"<<std::endl;
+        #endif
         //std::cout << "invalidate cache of " << cached_name << std::endl;
         cached_value = false;
         fill_n(cached_deriv.begin(), deriv.size(), false);
@@ -1407,31 +1346,40 @@ public:
     }
 
     virtual void update_variabletype_from_original() {
+        #ifdef EG_LOG_CACHE
+            std::cerr<<"CachedType "<< this->cached_name << " : update_variabletype_from_original() has been called"<<std::endl;
+        #endif
         invalidate_cache();
         argument->update_variabletype_from_original();
     }
 
 
     virtual DerivType derivative(int i) {
-        assert(i>=0);
+        EG_ASSERT(i>=0);
+        #ifdef EG_LOG_CACHE
+            std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") call with cached_value="<<cached_value
+                    <<" and deriv.size="<<(int)deriv.size()<<" and val="<<val;
+        #endif
         if (i < (int)deriv.size() ) {
+            #ifdef EG_CHECK_CACHE
+                 std::cerr <<" and cached_derv="<<cached_deriv[i] << std::endl;
+            #endif
             if (cached_deriv[i]) {
-                #ifdef CHECK_CACHE
-                assert( deriv[i] == argument->derivative(i) );
+                #ifdef EG_CHECK_CACHE
+                    EG_ASSERT_MSG( deriv[i] == argument->derivative(i),"CHECK ON CachedType FAILED");
                 #endif
                 return deriv[i];
             } else {
                 deriv[i] = argument->derivative(i);
                 cached_deriv[i] = true; 
+                #ifdef EG_LOG_CACHE
+                    std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") updated with ="<< deriv[i] << std::endl;
+                #endif
                 return deriv[i];
             }
         } else {
-            //return argument->derivative(i);
-            //typename AutoDiffTrait<ResultType>::DerivType a = argument->derivative(i);
-            //typename AutoDiffTrait<ResultType>::DerivType b = AutoDiffTrait<ResultType>::zeroDerivative();
-            //assert( a==b );
-            #ifdef CHECK_CACHE
-            assert( AutoDiffTrait<ResultType>::zeroDerivative() == argument->derivative(i) );
+            #ifdef EG_CHECK_CACHE
+                EG_ASSERT_MSG( AutoDiffTrait<ResultType>::zeroDerivative() == argument->derivative(i), "CHECK ON CachedType FAILED" );
             #endif
             return AutoDiffTrait<ResultType>::zeroDerivative();
         }
@@ -1569,6 +1517,11 @@ public:
         } else {
             thisnode=(size_t)this;
         }
+    }
+    ~CachedType() {
+        #ifdef EG_LOG_CACHE
+            std::cerr << "destructor CachedType("<<this->cached_name<<")"<<std::endl;
+        #endif
     }
 };
 /*

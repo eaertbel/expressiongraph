@@ -71,6 +71,12 @@ namespace KDL {
             virtual ~FunctionDefinition(){}
     };
 
+    inline typename FunctionDefinition::Ptr make_FunctionDefinition(const std::string& name ) {
+        return boost::make_shared< FunctionDefinition>(name);
+    } 
+    
+    std::ostream& operator<< (std::ostream& os, const FunctionDefinition& arg); 
+
     template<typename T>
     class FunctionParameter :
         public FunctionType<T> 
@@ -95,18 +101,32 @@ namespace KDL {
                 }
            }
            virtual ResultType value() {
-                //std::cout << "FunctionParameter::value() for  " << this->name << " started" << std::endl;
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter " << this->name << ":value() entered" << std::endl;
+                #endif
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
-                assert(e!=nullptr);
+                EG_ASSERT(e!=nullptr);
                 ResultType retval = e->value();
-                //std::cout << "FunctionParameter::value() for  " << this->name << " finished and returns " << retval << std::endl;
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter " << this->name << ":value() =" << retval << std::endl;
+                    std::cerr << "FunctionParameter " << this->name << ":value() returned" << std::endl;
+                #endif
                 return retval;
            }
+
            virtual DerivType derivative(int i) {
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter " << this->name << ":derivative("<<i<<") entered" << std::endl;
+                #endif
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
-                assert(e!=nullptr);
-                return e->derivative(i);
-           }
+                EG_ASSERT(e!=nullptr);
+                DerivType retval = e->derivative(i);
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter " << this->name << ":value() =" << retval << std::endl;
+                    std::cerr << "FunctionParameter " << this->name << ":derivative("<<i<<") returned" << std::endl;
+                #endif
+                return retval;
+          }
 
 
             virtual void getDependencies(std::set<int>& varset) {
@@ -126,7 +146,7 @@ namespace KDL {
            virtual void update_variabletype_from_original(){}
            virtual int number_of_derivatives(){
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
-                assert( e  );
+                EG_ASSERT( e  );
                 return e->number_of_derivatives();
             } 
   
@@ -136,8 +156,7 @@ namespace KDL {
 
            ~FunctionParameter() {} 
     };
-
-
+   
     /**
      * returns nullpointer if parameter name does not exist for this definition.
      *
@@ -221,11 +240,16 @@ namespace KDL {
                 if (ndx==-1) {
                     throw ArgumentNameException();
                 }
-                return addTypeCheckedArgument(ndx, cached<ArgType>(arg));
+                return addTypeCheckedArgument(ndx, cached<ArgType>("argument",arg));
              }
 
 
             virtual void addTypeCheckedArgument(int idx, ExpressionBase::Ptr arg) {
+                //std::cout << "adding argument " << idx << "  ";
+                //(arg)->print(std::cout);
+                //std::cout << std::endl;
+
+
                 // check range of idx:
                 if ((idx<0)||(idx>=definition->getNrOfParam())) {
                     throw ArgumentIndexException();

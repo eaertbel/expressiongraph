@@ -57,12 +57,12 @@ namespace KDL {
                 double* p = &storage[currentp];
                 currentp+=vecsize;
                 maxalloc=std::max( maxalloc, currentp);
-                assert(currentp<alloclimit);
+                EG_ASSERT(currentp<alloclimit);
                 return p;
             }
             void pop(int n=1) {
                 currentp-=vecsize*n;
-                assert(currentp>=0);
+                EG_ASSERT(currentp>=0);
             }
 
 

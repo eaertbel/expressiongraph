@@ -22,8 +22,8 @@
     #include <cxxabi.h>
     #include <malloc.h>
 #endif
-
 #include <Eigen/Core>
+#include <expressiongraph/expressiontree_exceptions.hpp>
 
 namespace KDL {
 
@@ -50,11 +50,11 @@ struct AutoDiffTrait {
     typedef T ValueType;
     typedef T DerivType;
     static ValueType zeroValue() {
-        assert(0 /* should never be called, only specialized versions should be called. */); 
+        EG_ASSERT_MSG(0,"should never be called, only specialized versions should be called."); 
         return 0;
     }
     static DerivType zeroDerivative() {
-        assert(0 /* should never be called, only specialized versions should be called. */); 
+        EG_ASSERT_MSG(0,"should never be called, only specialized versions should be called."); 
         return 0;
     }
     const static int size=0;
