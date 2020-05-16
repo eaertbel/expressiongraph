@@ -214,7 +214,8 @@ namespace KDL {
                 body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
-                }
+                }   
+                //std::cout << "FunctionEvaluation constructed" << std::endl;
             }
 
             FunctionEvaluation(FunctionDefinition::Ptr _definition, std::initializer_list<ExpressionBase::Ptr> list):
@@ -261,6 +262,10 @@ namespace KDL {
                 }
                 // call superclass:
                 arguments[idx] = arg;
+                arguments[idx]->resize_nr_of_derivatives();
+                definition->pushArgStack( &arguments );
+                body_expr->resize_nr_of_derivatives();
+                definition->popArgStack();
             }
      
             virtual ResultType value() {
