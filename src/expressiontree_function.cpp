@@ -82,11 +82,6 @@ namespace KDL {
         return argtypes.size();
     }
 
-    void FunctionDefinition::set_body_expression( ExpressionBase::Ptr _body_expr) {
-        body_expr = _body_expr;
-    }
-
-
     ExpressionType FunctionDefinition::getResultType() const {
         if (body_expr) {
             return body_expr->getResultType();

@@ -56,11 +56,16 @@ namespace KDL {
             virtual Arguments* topArgStack();
             virtual void popArgStack(); 
      
-            virtual void set_body_expression( ExpressionBase::Ptr _body_expr);
+            template <typename T>
+            void setBodyExpression( typename Expression<T>::Ptr _body_expr) {
+                body_expr = _body_expr;
+            }
+ 
+
             virtual ExpressionType getResultType() const;            
 
             template <typename T>
-            typename Expression<T>::Ptr get_body_expression() {
+            typename Expression<T>::Ptr getBodyExpression() {
                 if (AutoDiffTrait<T>::expr_type != body_expr->getResultType()) {
                     return nullptr;
                 } else {
@@ -214,7 +219,7 @@ namespace KDL {
                definition( _definition ),
                arguments(  _definition->getNrOfParam() )
             {
-                body_expr = _definition->get_body_expression<T>(); 
+                body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
                 }

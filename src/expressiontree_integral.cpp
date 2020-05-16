@@ -136,7 +136,7 @@ namespace KDL {
         // getting dependency information and establish 
         lower->getDependencies(set_lower);
         upper->getDependencies(set_upper);
-        integrand->get_body_expression<double>()->getDependencies(set_integrand); 
+        integrand->getBodyExpression<double>()->getDependencies(set_integrand); 
         for (auto &&e : set_lower) {     
             cached_derivatives[e] = 0.0;
         }
