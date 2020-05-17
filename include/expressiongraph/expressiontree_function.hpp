@@ -134,19 +134,32 @@ namespace KDL {
 
 
             virtual void getDependencies(std::set<int>& varset) {
-                varset.insert(1); // force a dependency on var. 1 (time) to avoid optimizing the expression away during construction
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                EG_ASSERT(e!=nullptr);
+                e->getDependencies(varset);
+                if (varset.size()==0) {
+                    varset.insert(0); // force a dependency on var. 0 (time) to avoid optimizing the expression away during construction
+                                      // of function evaluation object
+                }
             }
 
             virtual void getScalarDependencies(std::set<int>& varset) {
-                varset.insert(1); // force a dependency on var. 1 (time) to avoid optimizing the expression away during construction
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                EG_ASSERT(e!=nullptr);
+                e->getScalarDependencies(varset);
             }
 
-           virtual void setInputValues(const std::vector<double>& values) {
+            virtual void getRotDependencies(std::set<int>& varset) {
+                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+                EG_ASSERT(e!=nullptr);
+                e->getRotDependencies(varset);
             }
-           virtual void setInputValue(int variable_number, double val) {
-            }
+
+           virtual void setInputValues(const std::vector<double>& values) {}
+           virtual void setInputValue(int variable_number, double val) {}
            virtual void setInputValue(int variable_number, const Rotation& val){}
            virtual void update_variabletype_from_original(){}
+
            virtual int number_of_derivatives(){
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT( e  );
@@ -192,7 +205,23 @@ namespace KDL {
 
     template<typename T>
     class FunctionEvaluation: public Expression<T> {
-           int argcount; 
+
+        public:
+
+            using Ptr            = boost::shared_ptr< FunctionEvaluation<T> >;
+            using ResultType     = T;
+            using DerivType      = typename AutoDiffTrait<T>::DerivType;
+            using DerivExprType  = typename Expression< DerivType >::Ptr;
+
+        private:
+            int argcount; 
+            bool invalidated;    
+            ResultType                         cached_value;
+            std::map<int, DerivType>           cached_derivatives;
+            Arguments                          arguments;
+            FunctionDefinition::Ptr            definition;
+            boost::shared_ptr< Expression<T> > body_expr;   // typed copy of definition->body_expr
+
 
             // assuming valid ndx:
             void addArg(int ndx, boost::shared_ptr<ExpressionBase> arg ) {
@@ -203,29 +232,49 @@ namespace KDL {
                 if (!arguments[ndx])  argcount++;   // if not already added, increase the argcount
                 arguments[ndx] = arg;               // if already specified, overwrite
                 if (argcount==definition->getNrOfParam()) {
+                    // number of derivatives and dependencies may have changed:
+                    std::set<int> varset;
                     definition->pushArgStack( &arguments );
                     body_expr->resize_nr_of_derivatives();
+                    body_expr->getDependencies(varset);
                     definition->popArgStack();
+                    cached_derivatives.clear();
+                    for (auto el: varset) {
+                        cached_derivatives[el] = AutoDiffTrait<DerivType>::zeroValue(); 
+                    }
                 }
+                invalidated=true;
             }
+            void ensure_computed() {
+                if (invalidated) {
+                    std::cout << "ensure_computed is updating" << std::endl;
+                    if (argcount!=definition->getNrOfParam()) {
+                        throw WrongNumberOfArgumentsException(); 
+                    }
+                    definition->pushArgStack( &arguments );     
+                    body_expr->update_variabletype_from_original(); // invalidate all cache
+                    cached_value = body_expr->value();
+                    std::cout << "ensure_computed : value=" << cached_value << std::endl;
+                    for (auto &pair: cached_derivatives) {
+                         pair.second = body_expr->derivative(pair.first);
+                         std::cout << "ensure_computed : derivative("<<pair.first<<")="<<pair.second << std::endl;
+                    }
+                    definition->popArgStack();
+                    invalidated=false;    
+                    std::cout << "ensure_computed is finished" << std::endl;
+                } else {
+                    std::cout << "ensure_computed uses cache" << std::endl;
+                }
+            } 
 
         public:
-
-            using Ptr            = boost::shared_ptr< FunctionEvaluation<T> >;
-            using ResultType     = T;
-            using DerivType      = typename AutoDiffTrait<T>::DerivType;
-            using DerivExprType  = typename Expression< DerivType >::Ptr;
-
-            Arguments                          arguments;
-            FunctionDefinition::Ptr            definition;
-            boost::shared_ptr< Expression<T> > body_expr;   // typed copy of definition->body_expr
-
             
             explicit FunctionEvaluation( 
                 FunctionDefinition::Ptr _definition
             ): Expression<T>(_definition->getName()),
                definition( _definition ),
-               arguments(  _definition->getNrOfParam() )
+               arguments(  _definition->getNrOfParam() ),
+               invalidated(true)
             {
                 body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
@@ -237,7 +286,8 @@ namespace KDL {
             FunctionEvaluation(FunctionDefinition::Ptr _definition, std::initializer_list<ExpressionBase::Ptr> list):
                  Expression<T>(_definition->getName()),
                  definition( _definition ),
-                 arguments(  _definition->getNrOfParam() )
+                 arguments(  _definition->getNrOfParam() ),
+                 invalidated(true)
             {
                 body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
@@ -266,27 +316,25 @@ namespace KDL {
                 addArg(ndx,arg);
              }
 
-     
-            virtual ResultType value() {
-                definition->pushArgStack( &arguments );     
-                body_expr->update_variabletype_from_original(); // invalidate all cache
-                ResultType result = body_expr->value();
-                definition->popArgStack();
-                return result;
+            ResultType value() {
+                ensure_computed();
+                return cached_value; 
             }
 
-
-            virtual DerivType derivative(int i) {
-                definition->pushArgStack( &arguments );
-                body_expr->update_variabletype_from_original(); // invalidate all cache
-                ResultType val = body_expr->value();  // need because another function call can get in between
-                DerivType  der = body_expr->derivative(i);
-                definition->popArgStack();
-                return der;
+            DerivType derivative(int i) {
+                auto p = cached_derivatives.find(i);
+                if (p!=cached_derivatives.end()) {
+                    ensure_computed();
+                    std::cout << "derivative found, returning cached value "<< cached_derivatives[i] << std::endl;
+                    return cached_derivatives[i];
+                } else {
+                    std::cout << "derivative not found, returning zero" << std::endl;
+                    return AutoDiffTrait<DerivType>::zeroValue();
+                }
             }
-
 
             virtual DerivExprType derivativeExpression(int i) {
+                throw NotImplementedException();
             }
 
             virtual typename Expression<T>::Ptr clone() {
@@ -303,6 +351,7 @@ namespace KDL {
                     arguments[i]->setInputValues(values); 
                 }
                 body_expr->setInputValues(values);
+                invalidated=true;
             }
 
             virtual void setInputValue(int variable_number, double val) {
@@ -310,6 +359,7 @@ namespace KDL {
                     arguments[i]->setInputValue(variable_number,val); 
                 }
                 body_expr->setInputValue(variable_number,val);
+                invalidated=true;
             }
 
             virtual void setInputValue(int variable_number, const Rotation& val) {
@@ -317,6 +367,7 @@ namespace KDL {
                     arguments[i]->setInputValue(variable_number,val); 
                 }
                 body_expr->setInputValue(variable_number,val);
+                invalidated=true;
             }
 
             virtual int number_of_derivatives() {
@@ -336,6 +387,7 @@ namespace KDL {
                     arguments[i]->resize_nr_of_derivatives(); 
                 }
                 body_expr->resize_nr_of_derivatives();
+                invalidated=true;
             }
 
             virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
@@ -455,6 +507,8 @@ namespace KDL {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->update_variabletype_from_original();
                 }
+                body_expr->update_variabletype_from_original(); 
+                invalidated=true;
             }
 
             virtual void write_dotfile_update(std::ostream& of, pnumber& thisnode) {
