@@ -48,7 +48,7 @@ namespace KDL {
 
             virtual void addParam(const std::string& name, ExpressionType vartype); 
             virtual int getParamNdx(const std::string& name) const;
-            virtual const std::string& getParamName(int i) const;
+            virtual std::string getParamName(int i) const;
             virtual ExpressionType getParamType(int i) const;
             virtual int getNrOfParam() const;
            
@@ -144,7 +144,6 @@ namespace KDL {
            virtual void setInputValues(const std::vector<double>& values) {
             }
            virtual void setInputValue(int variable_number, double val) {
-                //std::cout << "FunctionParameter::setInputValue() for  " << this->name << " was called" << std::endl;
             }
            virtual void setInputValue(int variable_number, const Rotation& val){}
            virtual void update_variabletype_from_original(){}
@@ -193,6 +192,23 @@ namespace KDL {
 
     template<typename T>
     class FunctionEvaluation: public Expression<T> {
+           int argcount; 
+
+            // assuming valid ndx:
+            void addArg(int ndx, boost::shared_ptr<ExpressionBase> arg ) {
+                // type check
+                if (arg->getResultType()!=definition->getParamType(ndx)) {
+                    throw ArgumentWrongTypeException();
+                }
+                if (!arguments[ndx])  argcount++;   // if not already added, increase the argcount
+                arguments[ndx] = arg;               // if already specified, overwrite
+                if (argcount==definition->getNrOfParam()) {
+                    definition->pushArgStack( &arguments );
+                    body_expr->resize_nr_of_derivatives();
+                    definition->popArgStack();
+                }
+            }
+
         public:
 
             using Ptr            = boost::shared_ptr< FunctionEvaluation<T> >;
@@ -215,7 +231,7 @@ namespace KDL {
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
                 }   
-                //std::cout << "FunctionEvaluation constructed" << std::endl;
+                argcount = 0;
             }
 
             FunctionEvaluation(FunctionDefinition::Ptr _definition, std::initializer_list<ExpressionBase::Ptr> list):
@@ -227,12 +243,16 @@ namespace KDL {
                 if (body_expr==nullptr) {
                     throw BodyWrongTypeException();
                 }
+                argcount = 0;
                 int idx=0;
+                if (list.size() != definition->getNrOfParam()) {
+                    throw WrongNumberOfArgumentsException(); 
+                }
                 for (auto it = list.begin(); it != list.end(); ++it) {
-                    addTypeCheckedArgument(idx, *it);idx++;
+                   addArg(idx, *it);
+                   idx++;
                 }
             }
-
             template<typename ArgType>
             void addTypeCheckedArgument(
                 const std::string& name, 
@@ -242,41 +262,16 @@ namespace KDL {
                 if (ndx==-1) {
                     throw ArgumentNameException();
                 }
-                return addTypeCheckedArgument(ndx, cached<ArgType>("argument",arg));
+                arg = cached<ArgType>("argument "+name,arg);
+                addArg(ndx,arg);
              }
 
-
-            virtual void addTypeCheckedArgument(int idx, ExpressionBase::Ptr arg) {
-                //std::cout << "adding argument " << idx << "  ";
-                //(arg)->print(std::cout);
-                //std::cout << std::endl;
-
-
-                // check range of idx:
-                if ((idx<0)||(idx>=definition->getNrOfParam())) {
-                    throw ArgumentIndexException();
-                } 
-                // type check
-                if (arg->getResultType()!=definition->getParamType(idx)) {
-                    throw ArgumentWrongTypeException();
-                }
-                // call superclass:
-                arguments[idx] = arg;
-                arguments[idx]->resize_nr_of_derivatives();
-                definition->pushArgStack( &arguments );
-                body_expr->resize_nr_of_derivatives();
-                definition->popArgStack();
-            }
      
             virtual ResultType value() {
-                //std::cout << "FunctionEvaluation:value() started on ";
-                //this->print(std::cout);
-                //std::cout << std::endl;
                 definition->pushArgStack( &arguments );     
                 body_expr->update_variabletype_from_original(); // invalidate all cache
                 ResultType result = body_expr->value();
                 definition->popArgStack();
-                //std::cout << "FunctionEvaluation:value() finished with result=" << result << std::endl;
                 return result;
             }
 
@@ -298,7 +293,7 @@ namespace KDL {
                 // we do not clone the function definition itself.
                 auto expr = boost::make_shared< FunctionEvaluation<T> >(definition);
                 for (int i=0;i<arguments.size();++i) {
-                    expr->addTypeCheckedArgument(i, arguments[i]->cloneBase() ); 
+                    expr->addArg(i, arguments[i]->cloneBase() ); 
                 }
                 return expr;
             }
@@ -311,14 +306,10 @@ namespace KDL {
             }
 
             virtual void setInputValue(int variable_number, double val) {
-                //std::cout << "FunctionEvaluation:setInputValue started on ";
-                //this->print(std::cout);
-                //std::cout << std::endl;
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->setInputValue(variable_number,val); 
                 }
                 body_expr->setInputValue(variable_number,val);
-                //std::cout << "FunctionEvaluation:setInputValue finished" << std::endl;
             }
 
             virtual void setInputValue(int variable_number, const Rotation& val) {
@@ -485,7 +476,6 @@ namespace KDL {
             } 
 
             ~FunctionEvaluation() {
-                //std::cout << "FunctionEvaluation destructed" << std::endl;
             }
     };
  

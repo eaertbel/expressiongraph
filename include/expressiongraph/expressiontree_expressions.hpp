@@ -1398,7 +1398,7 @@ public:
                     <<" and deriv.size="<<(int)deriv.size()<<" and val="<<val;
         #endif
         if (i < (int)deriv.size() ) {
-            #ifdef EG_CHECK_CACHE
+            #ifdef EG_LOG_CACHE
                  std::cerr <<" and cached_derv="<<cached_deriv[i] << std::endl;
             #endif
             if (cached_deriv[i]) {

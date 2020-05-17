@@ -83,7 +83,7 @@ namespace KDL {
         return argtypes[i];
     }
 
-    const std::string& FunctionDefinition::getParamName(int i) const {
+    std::string FunctionDefinition::getParamName(int i) const {
         return argnames[i];
     }
 
