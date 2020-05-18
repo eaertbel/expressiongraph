@@ -79,7 +79,9 @@ public:
     virtual void addToOptimizer(ExpressionOptimizer& opt) {
         assert( 0 /* for now chain cannot be used together with optimization */ );
     }
-
+    virtual bool isConstant() const {
+        return false;
+    }
     virtual void getDependencies(std::set<int>& varset) {
         for (size_t i=0;i<chain.getNrOfJoints();++i) {
             varset.insert(index_of_first_joint+i);
@@ -149,6 +151,9 @@ public:
 
     virtual int number_of_derivatives() { 
         return argument->number_of_derivatives();
+    }
+    virtual bool isConstant() const {
+        return false;
     }
     virtual void resize_nr_of_derivatives() {}
     virtual void update_variabletype_from_original() {}

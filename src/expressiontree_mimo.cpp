@@ -255,7 +255,18 @@ void MIMO::addToOptimizer(ExpressionOptimizer& opt) {
         inputTwist[i]->addToOptimizer(opt);
     }
 }
-
+bool MIMO::isConstant() const {
+    for (size_t i=0;i<inputDouble.size();++i) {
+        if (!inputDouble[i]->isConstant()) return false;
+    }
+    for (size_t i=0;i<inputFrame.size();++i) {
+        if (!inputFrame[i]->isConstant()) return false;
+    }
+    for (size_t i=0;i<inputTwist.size();++i) {
+        if (!inputTwist[i]->isConstant()) return false;
+    }
+    return true;
+}
 void MIMO::getDependencies(std::set<int>& varset) {
     for (size_t i=0;i<inputDouble.size();++i) {
         inputDouble[i]->getDependencies(varset);

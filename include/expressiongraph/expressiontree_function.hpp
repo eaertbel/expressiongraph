@@ -131,8 +131,10 @@ namespace KDL {
                 #endif
                 return retval;
           }
-
-
+            virtual bool isConstant() const {
+                return false;
+            }
+ 
             virtual void getDependencies(std::set<int>& varset) {
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT(e!=nullptr);
@@ -463,7 +465,10 @@ namespace KDL {
                     arguments[i]->addToOptimizer(opt);
                 }
             }
-
+            virtual bool isConstant() const {
+                return false;
+            }
+ 
 
             virtual void getDependencies(std::set<int>& varset) {
                 for (unsigned int i=0;i<arguments.size();++i) {

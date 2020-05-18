@@ -110,7 +110,9 @@ public:
     virtual ResultType value() {
         return val;
     }
-
+    virtual bool isConstant() const {
+        return false;
+    }
     virtual void getDependencies(std::set<int>& varset) {
         for (size_t i=0;i<ndx.size();++i) {
             varset.insert( ndx[i]);

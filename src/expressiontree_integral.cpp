@@ -81,6 +81,7 @@ namespace KDL {
             virtual typename Expression<Twist>::Ptr subExpression_Twist(const std::string& name);
             virtual typename Expression<double>::Ptr subExpression_Double(const std::string& name);
             virtual void addToOptimizer(ExpressionOptimizer& opt);
+            virtual bool isConstant() const;
             virtual void getDependencies(std::set<int>& varset);
             virtual void getScalarDependencies(std::set<int>& varset);
             virtual void getRotDependencies(std::set<int>& varset);

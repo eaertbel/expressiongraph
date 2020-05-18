@@ -192,7 +192,25 @@ public:
      */
     virtual void addToOptimizer(ExpressionOptimizer& opt) = 0;
 
+
     /**
+     * determines wether an expression is constant, e.g. can be used to determine 
+     * whether an expression can be folded by evaluating this expression and store a
+     * cached representation.
+     * This is not exactly the same then having an empty dependency set.
+     * E.g. for when using make_constant(), or using variable with no Jacobian specified.
+     * Also used in the implementation of expressiongraph functions (where we have to be
+     * careful with our dependencies and folding of expressions).
+     *
+     * SEMANTICS: expression is certified to be constant.
+     * If it is false, we are not sure whether it is constant.
+     */
+    virtual bool isConstant() const = 0;
+    /**
+     * INVARIANT CONDITION:
+     *    The derivative towards an index that is not in the varset returned by this function
+     *    is garanteed to be zero.
+     *
      * adds the dependencies on (all types) input variables numbers to the given set of variables.
      * For rotational input variables, three dependencies are returned.
      * For VariableType nodes, the during construction specified variable numbers are returned.
@@ -481,6 +499,9 @@ public:
     virtual void addToOptimizer(ExpressionOptimizer& opt) {
         argument->addToOptimizer(opt);
     }
+    virtual bool isConstant() const {
+        return argument->isConstant();
+    }
     virtual void getDependencies(std::set<int>& varset) {
         argument->getDependencies(varset);
     }
@@ -619,7 +640,10 @@ public:
         argument1->addToOptimizer(opt);
         argument2->addToOptimizer(opt);
     }
-
+    virtual bool isConstant() const {
+        return (argument1->isConstant()) && (argument2->isConstant());
+    }
+ 
     virtual void getDependencies(std::set<int>& varset) {
         argument1->getDependencies(varset);
         argument2->getDependencies(varset);
@@ -815,6 +839,12 @@ public:
         argument3->addToOptimizer(opt);
     }
 
+    virtual bool isConstant() const {
+      return
+        argument1->isConstant() &&
+        argument2->isConstant() &&
+        argument3->isConstant();
+    }
 
     virtual void getDependencies(std::set<int>& varset) {
         argument1->getDependencies(varset);
@@ -1026,6 +1056,9 @@ public:
     virtual void resize_nr_of_derivatives() {
     }
 
+    virtual bool isConstant() const {
+        return true;
+    }
 
     virtual void print(std::ostream& os) const {
         detail::print(os,val);
@@ -1096,7 +1129,9 @@ public:
     } 
 
     virtual void addToOptimizer(ExpressionOptimizer& opt);
-
+    virtual bool isConstant() const {
+        return false;
+    }
     virtual void getDependencies(std::set<int>& varset) {
         varset.insert( variable_number);
     }
@@ -1204,12 +1239,17 @@ public:
     } 
 
     virtual void addToOptimizer(ExpressionOptimizer& opt);
+    
+    virtual bool isConstant() const {
+        return false;
+    }
 
     virtual void getDependencies(std::set<int>& varset) {
         varset.insert( variable_number);
         varset.insert( variable_number+1);
         varset.insert( variable_number+2);
     }
+
     virtual void getScalarDependencies(std::set<int>& varset) {
     }
     virtual void getRotDependencies(std::set<int>& varset) {
@@ -1371,7 +1411,9 @@ public:
         CachedExpression::addToOptimizer(opt);
         argument->addToOptimizer(opt);
     }
-
+    virtual bool isConstant() const {
+        return argument->isConstant();
+    }
     virtual void getDependencies(std::set<int>& varset) {
         argument->getDependencies(varset);
     }
@@ -1864,13 +1906,19 @@ inline typename Expression<T>::Ptr checkConstant( typename Expression<T>::Ptr a 
         if (!a) {
             throw NullPointerException();
         }
+        if (a->isConstant()) {
+            return Constant( a->value() );
+        } else {
+            return a;
+        }
+        /*
         std::set<int> vset;
         a->getDependencies(vset);
         if (vset.empty()) {
             return Constant( a->value() );
         } else {
             return a;
-        }
+        }*/
 }
 
 /*

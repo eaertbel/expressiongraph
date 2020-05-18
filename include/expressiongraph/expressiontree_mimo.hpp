@@ -62,7 +62,7 @@ public:
 
 
     virtual void addToOptimizer(ExpressionOptimizer& opt);
-
+    virtual bool isConstant() const;
     virtual void getDependencies(std::set<int>& varset);
     virtual void getScalarDependencies(std::set<int>& varset);
     virtual void getRotDependencies(std::set<int>& varset);
@@ -154,7 +154,9 @@ public:
     virtual void getDependencies(std::set<int>& varset) {
         mimo->getDependencies(varset);
     }
-
+    virtual bool isConstant() const {
+        return mimo->isConstant();
+    }
     virtual void getScalarDependencies(std::set<int>& varset) {
         mimo->getScalarDependencies(varset);
     }
