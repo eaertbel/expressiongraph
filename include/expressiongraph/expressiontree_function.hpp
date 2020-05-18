@@ -139,10 +139,10 @@ namespace KDL {
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT(e!=nullptr);
                 e->getDependencies(varset);
-                if (varset.size()==0) {
+                /*if (varset.size()==0) {
                     varset.insert(0); // force a dependency on var. 0 (time) to avoid optimizing the expression away during construction
                                       // of function evaluation object
-                }
+                }*/
             }
 
             virtual void getScalarDependencies(std::set<int>& varset) {
