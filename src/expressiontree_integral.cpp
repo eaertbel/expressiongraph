@@ -22,6 +22,7 @@
 #include <expressiongraph/expressiontree_integral.hpp>
 #include <expressiongraph/integrator.hpp>
 
+//#define EG_LOG_INTEGRALNODE
 namespace KDL {
 
     inline bool contains(const std::set<int>& s, const std::vector<int>& vec) {
@@ -36,7 +37,7 @@ namespace KDL {
             Expression<double>::Ptr lower; 
             Expression<double>::Ptr upper; 
             double epsilon; 
-            double maxstepsize; 
+            int minRecDepth; 
             int maxRecDepth; 
             bool invalidated;    
             double                cached_value;
@@ -61,7 +62,7 @@ namespace KDL {
                 Expression<double>::Ptr _lower, 
                 Expression<double>::Ptr _upper, 
                 double _epsilon, 
-                double _maxstepsize, 
+                int _minRecDepth, 
                 int _maxRecDepth );
             virtual double value();
             virtual double derivative(int i);
@@ -73,7 +74,6 @@ namespace KDL {
             virtual int number_of_derivatives();
             virtual void resize_nr_of_derivatives();
             virtual void update_variabletype_from_original();
-/*
             virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name);
             virtual typename Expression<Rotation>::Ptr subExpression_Rotation(const std::string& name);
             virtual typename Expression<Vector>::Ptr subExpression_Vector(const std::string& name);
@@ -89,13 +89,14 @@ namespace KDL {
             virtual void print(std::ostream& os) const;
             virtual void write_dotfile_update(std::ostream& of, pnumber& thisnode);
             virtual void write_dotfile_init();
-             ~FunctionEvaluation();
-*/ 
             virtual ~IntegralNode();
     };
 
     void IntegralNode::ensure_computed() {
         if (invalidated) {
+            #ifdef EG_LOG_INTEGRALNODE
+                std::cout << "recompute value and derivatives :";
+            #endif
             for (auto el: cached_derivatives) {
                 el.second = 0.0;
             }
@@ -104,7 +105,24 @@ namespace KDL {
             double upperval = upper->value();
             int errcode =  integrator->integrate(func,lowerval,upperval,result);
             cached_value = result[0];
-            for (int i=0;i<index_map.size();++i) {
+            for (auto &e: cached_derivatives) {
+                e.second = 0.0;
+                #ifdef EG_LOG_INTEGRALNODE
+                    std::cout << e.first;
+                #endif
+            }
+            #ifdef EG_LOG_INTEGRALNODE
+                std::cout << std::endl;
+                std::cout << "returned result : ";
+                for (int i=0;i<set_integrand.size()+1;++i) {
+                    std::cout << result[i] <<"\t";
+                }
+                std::cout << std::endl;
+            #endif
+            for (int i=1;i<index_map.size()+1;++i) {
+                #ifdef EG_LOG_INTEGRALNODE
+                    std::cout << "         index_map[i] with i=" << i << " and index_map[i]= "<< index_map[i] << std::endl;
+                #endif
                 cached_derivatives[index_map[i]] = result[i];
             } 
             for (auto i: set_lower) {
@@ -122,56 +140,114 @@ namespace KDL {
         Expression<double>::Ptr _lower, 
         Expression<double>::Ptr _upper, 
         double _epsilon, 
-        double _maxstepsize, 
+        int _minRecDepth, 
         int _maxRecDepth ):
             integrand(_integrand),
             lower(_lower),
             upper(_upper),
             epsilon(_epsilon),
-            maxstepsize(_maxstepsize),
+            minRecDepth(_minRecDepth),
             maxRecDepth(_maxRecDepth)
      {
+                    #ifdef EG_LOG_INTEGRALNODE
+                    std::cout << "create Integral Node" << std::endl;
+                    std::cout << "    Integrand : ";
+                    integrand->getBodyExpression<double>()->print(std::cout);
+                    std::cout << std::endl;
+                    std::cout << "    Lower limit : ";
+                    lower->print(std::cout);
+                    std::cout << std::endl;
+                    std::cout << "    Upper limit : ";
+                    upper->print(std::cout);
+                    std::cout << std::endl;
+                    #endif 
         if (integrand->getNrOfParam()!=1) {
             throw WrongNumberOfArgumentsException();
         }
-        // getting dependency information and establish 
+        // getting dependency information 
         lower->getDependencies(set_lower);
         upper->getDependencies(set_upper);
         integrand->getBodyExpression<double>()->getDependencies(set_integrand); 
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << "dependency of lower limit : ";
+                    #endif
         for (auto &&e : set_lower) {     
             cached_derivatives[e] = 0.0;
-        }
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << e << " " <<std::endl;
+                    #endif
+         }
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << std::endl;
+                        std::cout << "dependency of upper limit : ";
+                    #endif
         for (auto &&e : set_upper) {
             cached_derivatives[e] = 0.0;
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << e << " " <<std::endl;
+                    #endif
         }
         int ndx=1;
-        index_map.resize( set_integrand.size() );
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << std::endl;
+                        std::cout << "dependency of integrand : " << std::endl;
+                    #endif
+        index_map.resize( set_integrand.size()+1 );
         for (auto &&e : set_integrand) {
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << "         index_map[ndx] with ndx=" << ndx << " and index_map[ndx]= "<<e << std::endl;
+                    #endif
             cached_derivatives[e] = 0.0;
             index_map[ndx] = e;
             ndx = ndx + 1;
         }
+                #ifdef EG_LOG_INTEGRALNODE
+                    std::cout << std::endl;
+                    std::cout << "Is integrand constant() " << integrand->getBodyExpression<double>()->isConstant() << std::endl;
+                #endif
         cached_value=0.0;
         invalidated=true;
         integrator = boost::make_shared< IntegratorAdaptiveSimpson >( 
             epsilon, 
-            maxstepsize, 
+            minRecDepth, 
             maxRecDepth, 
             set_integrand.size()+1
         );
 
         var = Variable<double>({});
         func_eval.reset( new FunctionEvaluation<double>(integrand,{var}));
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << "Function evaluation node "<< std::endl;
+                        std::cout << "    " << func_eval << std::endl;
+                        std::cout << "    isConstant() " << func_eval->isConstant() << std::endl;
+                        std::set<int> fset;
+                        func_eval->getDependencies(fset); 
+                        std::cout << "    dependencies : "; 
+                        for (auto && e: fset) {
+                            std::cout << e<<" ";
+                        }
+                        std::cout << std::endl;
+                    #endif
         int vecsize = set_integrand.size()+1;
         result = new double[vecsize];
-        func =  [=](double arg,double* result) {
+        func =  [=](double arg,double* result)->void {
             var->setValue(arg);         
+            func_eval->update_variabletype_from_original();
             result[0] = func_eval->value();
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << "evaluate at " << arg << " resulting in " << result[0];
+                    #endif
             int i=1;
             for (auto&& ndx : set_integrand) {
                 result[i] = func_eval->derivative(ndx);
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << "\t("<<ndx<<")" << result[i];
+                    #endif
                 i = i + 1;
             }
+                    #ifdef EG_LOG_INTEGRALNODE
+                        std::cout << std::endl;
+                    #endif
             return;
         };
     }
@@ -185,21 +261,28 @@ namespace KDL {
         auto p = cached_derivatives.find(i);
         if (p!=cached_derivatives.end()) {
             ensure_computed();
+            #ifdef EG_LOG_INTEGRALNODE
+                std::cout << "derivative("<<i<<") cached value returned " <<  cached_derivatives[i] << std::endl;
+            #endif
             return cached_derivatives[i];
         } else {
+            #ifdef EG_LOG_INTEGRALNODE
+                std::cout << "derivative("<<i<<") not a dependency zero returned" << std::endl;
+            #endif
             return 0.0;
         }
     }
 
     Expression<double>::Ptr IntegralNode::derivativeExpression(int i) {
+        throw NotImplementedException();
     }
 
     Expression<double>::Ptr IntegralNode::clone() {
-        return boost::make_shared< IntegralNode >(integrand, lower,upper,epsilon,maxstepsize,maxRecDepth);
+        return boost::make_shared< IntegralNode >(integrand, lower,upper,epsilon,minRecDepth,maxRecDepth);
     }
 
     void IntegralNode::setInputValues(const std::vector<double>& values) {
-        assert(0 && "NOT SUPPORTED");
+        throw NotImplementedException();
         /*if (contains(set_integrand,values)) {
             func_eval->setInputValues(values);
             invalidated=true;
@@ -276,141 +359,150 @@ namespace KDL {
         invalidated=true;
     }
 
-/*
+    bool IntegralNode::isConstant() const {
+        return false;
+    }
+    void IntegralNode::getDependencies(std::set<int>& varset) {
+        lower->getDependencies(varset);
+        upper->getDependencies(varset);
+        integrand->getBodyExpression<double>()->getDependencies(varset); 
+    }
+
+    void IntegralNode::getScalarDependencies(std::set<int>& varset) {
+        lower->getDependencies(varset);
+        upper->getDependencies(varset);
+        integrand->getBodyExpression<double>()->getDependencies(varset); 
+    }
+
+    void IntegralNode::getRotDependencies(std::set<int>& varset) {
+        lower->getDependencies(varset);
+        upper->getDependencies(varset);
+        integrand->getBodyExpression<double>()->getDependencies(varset); 
+    }
+
     typename Expression<Frame>::Ptr IntegralNode::subExpression_Frame(const std::string& name) {
-        typename Expression<Frame>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Frame(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+//        typename Expression<Frame>::Ptr a;
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            a = arguments[i]->subExpression_Frame(name);
+//            if (a) {
+//                return a;
+//            }
+//        }
+//        return a;
     }
 
     typename Expression<Rotation>::Ptr IntegralNode::subExpression_Rotation(const std::string& name) {
-        typename Expression<Rotation>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Rotation(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+//        typename Expression<Rotation>::Ptr a;
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            a = arguments[i]->subExpression_Rotation(name);
+//            if (a) {
+//                return a;
+//            }
+//        }
+//        return a;
     }
 
     typename Expression<Vector>::Ptr IntegralNode::subExpression_Vector(const std::string& name) {
-        typename Expression<Vector>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Vector(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+//        typename Expression<Vector>::Ptr a;
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            a = arguments[i]->subExpression_Vector(name);
+//            if (a) {
+//                return a;
+//            }
+//        }
+//        return a;
     }
 
     typename Expression<Wrench>::Ptr IntegralNode::subExpression_Wrench(const std::string& name) {
-        typename Expression<Wrench>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Wrench(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+//        typename Expression<Wrench>::Ptr a;
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            a = arguments[i]->subExpression_Wrench(name);
+//            if (a) {
+//                return a;
+//            }
+//        }
+//        return a;
     }
 
     typename Expression<Twist>::Ptr IntegralNode::subExpression_Twist(const std::string& name) {
-        typename Expression<Twist>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Twist(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+//        typename Expression<Twist>::Ptr a;
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            a = arguments[i]->subExpression_Twist(name);
+//            if (a) {
+//                return a;
+//            }
+//        }
+//        return a;
 
     }
 
     typename Expression<double>::Ptr IntegralNode::subExpression_Double(const std::string& name) {
-        typename Expression<double>::Ptr a;
-        for (unsigned int i=0;i<arguments.size();++i) {
-            a = arguments[i]->subExpression_Double(name);
-            if (a) {
-                return a;
-            }
-        }
-        return a;
+        throw NotImplementedException();
+ //       typename Expression<double>::Ptr a;
+ //       for (unsigned int i=0;i<arguments.size();++i) {
+ //           a = arguments[i]->subExpression_Double(name);
+ //           if (a) {
+ //               return a;
+ //           }
+ //       }
+ //       return a;
     }
 
     // the optimizer only knows the arguments, the function itself is always recomputed.
     void IntegralNode::addToOptimizer(ExpressionOptimizer& opt) {
-        for (unsigned int i=0;i<arguments.size();++i) {
-            arguments[i]->addToOptimizer(opt);
-        }
+        throw NotImplementedException();
+//        for (unsigned int i=0;i<arguments.size();++i) {
+//            arguments[i]->addToOptimizer(opt);
+//        }
     }
 
-
-    void IntegralNode::getDependencies(std::set<int>& varset) {
-        for (unsigned int i=0;i<arguments.size();++i) {
-            arguments[i]->getDependencies(varset);
-        }
-        body_expr->getDependencies(varset);
-    }
-
-    void IntegralNode::getScalarDependencies(std::set<int>& varset) {
-        for (unsigned int i=0;i<arguments.size();++i) {
-            arguments[i]->getScalarDependencies(varset);
-        }
-        body_expr->getScalarDependencies(varset);
-    }
-
-    void IntegralNode::getRotDependencies(std::set<int>& varset) {
-        for (unsigned int i=0;i<arguments.size();++i) {
-            arguments[i]->getRotDependencies(varset);
-        }
-        body_expr->getRotDependencies(varset);
-    }
 
     void IntegralNode::debug_printtree() {
-        std::cout << Expression<ResultType>::name << "(";
-        for (unsigned int i=0;i<arguments.size();++i) {
-            if (i!=0) std::cout << ",";
-            arguments[i]->debug_printtree();
-        }
-        std::cout << ")";
+        throw NotImplementedException();
+        //std::cout << Expression<ResultType>::name << "(";
+        //for (unsigned int i=0;i<arguments.size();++i) {
+        //    if (i!=0) std::cout << ",";
+        //    arguments[i]->debug_printtree();
+       // }
+        //std::cout << ")";
     }
     void IntegralNode::print(std::ostream& os) const {
-        os << "" << Expression<ResultType>::name << "(";
-        for (unsigned int i=0;i<arguments.size();++i) {
-            if (i!=0) os << ",";
-            arguments[i]->print(os);
-        }
-        os << ")";
+        os << "Integral(lower=";lower->print(os);
+        os << ", upper=";upper->print(os);
+        os << ", integrand = "; func_eval->print(os);
+        os << ")"; 
+        //os << "" << Expression<ResultType>::name << "(";
+        //for (unsigned int i=0;i<arguments.size();++i) {
+        //    if (i!=0) os << ",";
+        //    arguments[i]->print(os);
+        //}
+        //os << ")";
     }
 
     void IntegralNode::write_dotfile_update(std::ostream& of, pnumber& thisnode) {
-        thisnode=(size_t)this;
-        of << "S"<<thisnode<<"[label=\"" << Expression<ResultType>::name << "\",shape=box,style=filled,fillcolor="
-           << COLOR_OPERATION << ",color=black]\n";
-        std::vector<pnumber> argnode( arguments.size());
-        for (unsigned int i=0;i<arguments.size();++i) {
-            arguments[i]->write_dotfile_update(of,argnode[i]);
-        }
-        for (unsigned int i=0;i<arguments.size();++i) {
-            of << "S"<<thisnode<<" -> " << "S"<<argnode[i] << "\n"; //rev
-        }
+        throw NotImplementedException();
+        //thisnode=(size_t)this;
+        //of << "S"<<thisnode<<"[label=\"" << Expression<ResultType>::name << "\",shape=box,style=filled,fillcolor="
+        //   << COLOR_OPERATION << ",color=black]\n";
+        //std::vector<pnumber> argnode( arguments.size());
+        //for (unsigned int i=0;i<arguments.size();++i) {
+        //    arguments[i]->write_dotfile_update(of,argnode[i]);
+       // }
+        //for (unsigned int i=0;i<arguments.size();++i) {
+         //   of << "S"<<thisnode<<" -> " << "S"<<argnode[i] << "\n"; //rev
+        //}
     }
     void IntegralNode::write_dotfile_init() {
-        for (unsigned int i =0;i<arguments.size();++i) {
-            arguments[i]->write_dotfile_init();
-        }
+        throw NotImplementedException();
+        //for (unsigned int i =0;i<arguments.size();++i) {
+        //    arguments[i]->write_dotfile_init();
+        //}
     } 
-
-    IntegralNode::~FunctionEvaluation() {
-    }
-*/ 
     IntegralNode::~IntegralNode(){
         delete [] result;
     }
@@ -446,10 +538,10 @@ namespace KDL {
                 Expression<double>::Ptr _lower, 
                 Expression<double>::Ptr _upper, 
                 double _epsilon, 
-                double _maxstepsize, 
+                int _minRecDepth, 
                 int _maxRecDepth ) {
         return boost::make_shared<IntegralNode>(
-            _integrand,_lower,_upper,_epsilon,_maxstepsize,_maxRecDepth
+            _integrand,_lower,_upper,_epsilon,_minRecDepth,_maxRecDepth
         );
     }
 

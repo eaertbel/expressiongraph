@@ -41,7 +41,7 @@ namespace KDL {
                 Expression<double>::Ptr _lower, 
                 Expression<double>::Ptr _upper, 
                 double _epsilon, 
-                double _maxstepsize, 
+                int _minRecDepth, 
                 int _maxRecDepth );
 
 } // namespace KDL
