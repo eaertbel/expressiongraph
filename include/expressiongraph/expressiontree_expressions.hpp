@@ -1978,28 +1978,32 @@ inline bool isConstant( typename Expression<T>::Ptr a) {
     if (!a) {
         throw NullPointerException();
     }
+    return a->isConstant();
+    /*
     std::set<int> vset;
     a->getDependencies(vset);
-    return vset.empty();
+    return vset.empty();*/
 }
 
 inline bool isConstantZero( Expression<double>::Ptr a) {
     if (!a) {
         throw NullPointerException();
     }
-    std::set<int> vset;
+    return a->isConstant() && (a->value()==0);
+    /*std::set<int> vset;
     a->getDependencies(vset);
-    return vset.empty() && (a->value()==0);
+    return vset.empty() && (a->value()==0);*/
 }
 
 inline bool isConstantOne( Expression<double>::Ptr a) {
     if (!a) {
         throw NullPointerException();
     }
-    std::set<int> vset;
+    return a->isConstant() && (1-EG_EPS_EQUAL <= a->value()) && (a->value() <= 1+EG_EPS_EQUAL);
+    /*std::set<int> vset;
     a->getDependencies(vset);
     double eps = 1E-16;
-    return vset.empty() && (1-eps <= a->value()) && (a->value() <= 1+eps);
+    return vset.empty() && (1-eps <= a->value()) && (a->value() <= 1+eps);*/
 }
 
 

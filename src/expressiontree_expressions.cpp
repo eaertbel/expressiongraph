@@ -32,6 +32,8 @@ using namespace std;
 
 namespace KDL {
 
+double EG_EPS_EQUAL = 1E-16;
+
 void ExpressionOptimizer::prepare(const std::vector<int>& inputvarnr, const std::vector<int>& rotinputvarnr) {
     inputset.clear();   
 

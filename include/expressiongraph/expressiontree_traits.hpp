@@ -25,6 +25,8 @@
 #include <Eigen/Core>
 #include <expressiongraph/expressiontree_exceptions.hpp>
 
+
+
 namespace KDL {
 
 enum class ExpressionType {
@@ -38,6 +40,10 @@ enum class ExpressionType {
     expression_matrix= 7,
     unknown   = 999 
 };
+
+// tollerance to consider a value equal.
+// (e.g. during simplifications, equal to one)
+extern double EG_EPS_EQUAL;
 
 
 /**
