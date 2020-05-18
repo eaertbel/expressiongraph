@@ -241,31 +241,47 @@ namespace KDL {
                     body_expr->getDependencies(varset);
                     definition->popArgStack();
                     cached_derivatives.clear();
+                        #ifdef EG_LOG_CACHE
+                        std::cout << "cached_derivative indices : ";
+                        #endif
                     for (auto el: varset) {
+                            #ifdef EG_LOG_CACHE
+                            std::cout << el << "\t";
+                            #endif
                         cached_derivatives[el] = AutoDiffTrait<DerivType>::zeroValue(); 
                     }
+                        #ifdef EG_LOG_CACHE
+                        std::cout << std::endl;
+                        #endif
                 }
                 invalidated=true;
             }
             void ensure_computed() {
                 if (invalidated) {
-                    std::cout << "ensure_computed is updating" << std::endl;
                     if (argcount!=definition->getNrOfParam()) {
                         throw WrongNumberOfArgumentsException(); 
                     }
                     definition->pushArgStack( &arguments );     
                     body_expr->update_variabletype_from_original(); // invalidate all cache
                     cached_value = body_expr->value();
-                    std::cout << "ensure_computed : value=" << cached_value << std::endl;
+                        #ifdef EG_LOG_CACHE
+                        std::cout << "cached_derivative indices during ensure_compute : ";
+                        #endif
                     for (auto &pair: cached_derivatives) {
+                             #ifdef EG_LOG_CACHE
+                             std::cout << pair.first << "\t";
+                             #endif
                          pair.second = body_expr->derivative(pair.first);
-                         std::cout << "ensure_computed : derivative("<<pair.first<<")="<<pair.second << std::endl;
+                             #ifdef EG_LOG_CACHE
+                             std::cout << "cached_derivative[" << pair.first << "]=" << pair.second << "\t\t";
+                             #endif
                     }
+                        #ifdef EG_LOG_CACHE
+                        std::cout << std::endl;
+                        #endif
                     definition->popArgStack();
                     invalidated=false;    
-                    std::cout << "ensure_computed is finished" << std::endl;
                 } else {
-                    std::cout << "ensure_computed uses cache" << std::endl;
                 }
             } 
 
@@ -326,11 +342,15 @@ namespace KDL {
             DerivType derivative(int i) {
                 auto p = cached_derivatives.find(i);
                 if (p!=cached_derivatives.end()) {
+                        #ifdef EG_LOG_CACHE
+                        std::cout << "derivative("<<i<<") ensure_compute used" << std::endl;
+                        #endif
                     ensure_computed();
-                    std::cout << "derivative found, returning cached value "<< cached_derivatives[i] << std::endl;
                     return cached_derivatives[i];
                 } else {
-                    std::cout << "derivative not found, returning zero" << std::endl;
+                        #ifdef EG_LOG_CACHE
+                        std::cout << "derivative("<<i<<") ensure_compute NOT used" << std::endl;
+                        #endif
                     return AutoDiffTrait<DerivType>::zeroValue();
                 }
             }
