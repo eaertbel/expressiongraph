@@ -222,6 +222,7 @@ namespace KDL {
             Arguments                          arguments;
             FunctionDefinition::Ptr            definition;
             boost::shared_ptr< Expression<T> > body_expr;   // typed copy of definition->body_expr
+            bool                               first_time;
 
             void print_state(const std::string& msg) {
                 std::cout << definition->getName() << ":"<< msg<< " : invalidated="<<invalidated
@@ -298,7 +299,8 @@ namespace KDL {
             ): Expression<T>(_definition->getName()),
                definition( _definition ),
                arguments(  _definition->getNrOfParam() ),
-               invalidated(true)
+               invalidated(true),
+               first_time(true)
             {
                 body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
@@ -311,7 +313,8 @@ namespace KDL {
                  Expression<T>(_definition->getName()),
                  definition( _definition ),
                  arguments(  _definition->getNrOfParam() ),
-                 invalidated(true)
+                 invalidated(true),
+                 first_time(true)
             {
                 body_expr = _definition->getBodyExpression<T>(); 
                 if (body_expr==nullptr) {
@@ -336,7 +339,16 @@ namespace KDL {
                 if (ndx==-1) {
                     throw ArgumentNameException();
                 }
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "add argument " << name << " of " << definition->getName() << ":";
+                    arg->print(std::cerr);
+                    std::cerr << " after cache ";
+                #endif
                 arg = cached<ArgType>("argument "+name,arg);
+                #ifdef EG_LOG_CACHE
+                    arg->print(std::cerr);
+                    std::cerr << std::endl;
+                #endif
                 addArg(ndx,arg);
              }
 
@@ -346,17 +358,15 @@ namespace KDL {
             }
 
             DerivType derivative(int i) {
-                auto p = cached_derivatives.find(i);
+               auto p = cached_derivatives.find(i);
+                #ifdef EG_LOG_CACHE
+                print_state("derivative");
+                std::cout << definition->getName() << ":derivative("<<i<<") found: "<< (p!=cached_derivatives.end())  << std::endl;
+                #endif
                 if (p!=cached_derivatives.end()) {
-                        #ifdef EG_LOG_CACHE
-                        std::cout << "derivative("<<i<<") ensure_compute used" << std::endl;
-                        #endif
                     ensure_computed();
                     return cached_derivatives[i];
                 } else {
-                        #ifdef EG_LOG_CACHE
-                        std::cout << "derivative("<<i<<") ensure_compute NOT used" << std::endl;
-                        #endif
                     return AutoDiffTrait<DerivType>::zeroValue();
                 }
             }
@@ -403,7 +413,9 @@ namespace KDL {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     n = std::max( n, arguments[i]->number_of_derivatives() ); 
                 }
+                definition->pushArgStack( &arguments );     
                 n = std::max( n, body_expr->number_of_derivatives() ); 
+                definition->popArgStack();     
                 return n;
             } 
 
@@ -414,7 +426,9 @@ namespace KDL {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->resize_nr_of_derivatives(); 
                 }
+                definition->pushArgStack( &arguments );
                 body_expr->resize_nr_of_derivatives();
+                definition->popArgStack();
                 invalidated=true;
             }
 
@@ -500,21 +514,27 @@ namespace KDL {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->getDependencies(varset);
                 }
+                definition->pushArgStack( &arguments );
                 body_expr->getDependencies(varset);
+                definition->popArgStack();
             }
 
             virtual void getScalarDependencies(std::set<int>& varset) {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->getScalarDependencies(varset);
                 }
+                definition->pushArgStack( &arguments );
                 body_expr->getScalarDependencies(varset);
+                definition->popArgStack();
             }
 
             virtual void getRotDependencies(std::set<int>& varset) {
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->getRotDependencies(varset);
                 }
+                definition->pushArgStack( &arguments );
                 body_expr->getRotDependencies(varset);
+                definition->popArgStack();
             }
 
             virtual void debug_printtree() {
@@ -535,11 +555,13 @@ namespace KDL {
             }
 
             virtual void update_variabletype_from_original() {
+                invalidated=true;
                 for (unsigned int i=0;i<arguments.size();++i) {
                     arguments[i]->update_variabletype_from_original();
                 }
+                definition->pushArgStack( &arguments );
                 body_expr->update_variabletype_from_original(); 
-                invalidated=true;
+                definition->popArgStack();
             }
 
             virtual void write_dotfile_update(std::ostream& of, pnumber& thisnode) {
