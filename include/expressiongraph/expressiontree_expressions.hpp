@@ -1374,19 +1374,20 @@ public:
         cached_deriv(_argument->number_of_derivatives()),
         cached_value(false),
         cached_name(_name) {
-        #ifdef EG_LOG_CACHE
-            std::cerr << "Constructed CachedType("<<this->cached_name<<")"<<std::endl;
-        #endif
+        //#ifdef EG_LOG_CACHE
+        //    std::cerr << "Constructed CachedType("<<this->cached_name<<")"<<std::endl;
+        //#endif
     }
 
     virtual ResultType value() {
-        #ifdef EG_LOG_CACHE
-            std::cerr<<"CachedType " << this->cached_name << " : value() call with cached_value="<<cached_value<<" and val="<<val<<std::endl;
-        #endif
-        if (cached_value) {
+       if (cached_value) {
             #ifdef EG_CHECK_CACHE
                 EG_ASSERT_MSG( val == argument->value(),"CHECK ON CachedType FAILED" );
             #endif
+            #ifdef EG_LOG_CACHE
+                std::cerr<<"CachedType " << this->cached_name << " : cached value used="<< val <<std::endl;
+            #endif
+       
             return val;
         } else {
             val          = argument->value();
@@ -1425,9 +1426,6 @@ public:
     }
 
     virtual void update_variabletype_from_original() {
-        #ifdef EG_LOG_CACHE
-            std::cerr<<"CachedType "<< this->cached_name << " : update_variabletype_from_original() has been called"<<std::endl;
-        #endif
         invalidate_cache();
         argument->update_variabletype_from_original();
     }
@@ -1435,30 +1433,31 @@ public:
 
     virtual DerivType derivative(int i) {
         EG_ASSERT(i>=0);
-        #ifdef EG_LOG_CACHE
-            std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") call with cached_value="<<cached_value
-                    <<" and deriv.size="<<(int)deriv.size()<<" and val="<<val;
-        #endif
         if (i < (int)deriv.size() ) {
-            #ifdef EG_LOG_CACHE
-                 std::cerr <<" and cached_derv="<<cached_deriv[i] << std::endl;
-            #endif
-            if (cached_deriv[i]) {
+           if (cached_deriv[i]) {
                 #ifdef EG_CHECK_CACHE
                     EG_ASSERT_MSG( deriv[i] == argument->derivative(i),"CHECK ON CachedType FAILED");
+                #endif
+                #ifdef EG_LOG_CACHE
+                    std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") call with cached_value="<<cached_value
+                            <<" and deriv.size="<<(int)deriv.size()<<" and val="<<val << "(CACHED)"<<std::endl;
                 #endif
                 return deriv[i];
             } else {
                 deriv[i] = argument->derivative(i);
                 cached_deriv[i] = true; 
                 #ifdef EG_LOG_CACHE
-                    std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") updated with ="<< deriv[i] << std::endl;
+                    std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") call with cached_value="<<cached_value
+                            <<" and deriv.size="<<(int)deriv.size()<<" and val="<<val << "(RECOMPUTED)"<<std::endl;
                 #endif
                 return deriv[i];
             }
         } else {
             #ifdef EG_CHECK_CACHE
                 EG_ASSERT_MSG( AutoDiffTrait<ResultType>::zeroDerivative() == argument->derivative(i), "CHECK ON CachedType FAILED" );
+            #endif
+            #ifdef EG_LOG_CACHE
+                std::cerr<<"CachedType " << this->cached_name << " : derivative("<<i<<") returned zero because > deriv.size="<<(int)deriv.size()<< std::endl;
             #endif
             return AutoDiffTrait<ResultType>::zeroDerivative();
         }
@@ -1608,9 +1607,9 @@ public:
         }
     }
     ~CachedType() {
-        #ifdef EG_LOG_CACHE
-            std::cerr << "destructor CachedType("<<this->cached_name<<")"<<std::endl;
-        #endif
+        //#ifdef EG_LOG_CACHE
+        //    std::cerr << "destructor CachedType("<<this->cached_name<<")"<<std::endl;
+        //#endif
     }
 };
 /*

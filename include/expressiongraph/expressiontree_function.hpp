@@ -105,29 +105,21 @@ namespace KDL {
                 }
            }
            virtual ResultType value() {
-                #ifdef EG_LOG_CACHE
-                    std::cerr << "FunctionParameter " << this->name << ":value() entered" << std::endl;
-                #endif
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT(e!=nullptr);
                 ResultType retval = e->value();
                 #ifdef EG_LOG_CACHE
-                    std::cerr << "FunctionParameter " << this->name << ":value() =" << retval << std::endl;
-                    std::cerr << "FunctionParameter " << this->name << ":value() returned" << std::endl;
+                    std::cerr << "FunctionParameter value() call:" << this->name << " : value()=" << retval << std::endl;
                 #endif
                 return retval;
            }
 
            virtual DerivType derivative(int i) {
-                #ifdef EG_LOG_CACHE
-                    std::cerr << "FunctionParameter " << this->name << ":derivative("<<i<<") entered" << std::endl;
-                #endif
                 typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT(e!=nullptr);
                 DerivType retval = e->derivative(i);
                 #ifdef EG_LOG_CACHE
-                    std::cerr << "FunctionParameter " << this->name << ":value() =" << retval << std::endl;
-                    std::cerr << "FunctionParameter " << this->name << ":derivative("<<i<<") returned" << std::endl;
+                    std::cerr << "FunctionParameter derivative call:" << this->name << " : value()=" << retval << ", derivative("<<i<<")="<< retval << std::endl;
                 #endif
                 return retval;
           }
@@ -136,13 +128,20 @@ namespace KDL {
             }
  
             virtual void getDependencies(std::set<int>& varset) {
-                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
+               typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 EG_ASSERT(e!=nullptr);
                 e->getDependencies(varset);
                 /*if (varset.size()==0) {
                     varset.insert(0); // force a dependency on var. 0 (time) to avoid optimizing the expression away during construction
                                       // of function evaluation object
                 }*/
+                #ifdef EG_LOG_CACHE
+                    std::cerr << "FunctionParameter::getDependencies " << this->name << " of " << definition->getName() << " : (";
+                    for (auto & el: varset) { std::cerr << el <<" ";}
+                    std::cerr << "): ";
+                    e->print(std::cerr);
+                    std::cerr << std::endl;
+                #endif
             }
 
             virtual void getScalarDependencies(std::set<int>& varset) {
@@ -170,10 +169,10 @@ namespace KDL {
             virtual void resize_nr_of_derivatives() {
                typename Expression<T>::Ptr e = boost::dynamic_pointer_cast< Expression<T> > (   (*definition->topArgStack())[index] );
                 e->resize_nr_of_derivatives();
-                #ifdef EG_LOG_CACHE
-                    std::cerr << "FunctionParameter " << this->name << " resize_nr_of_derivatives to " <<  e->number_of_derivatives() << " of ";
-                    e->print(std::cerr); std::cerr << e << std::endl; 
-                #endif
+                //#ifdef EG_LOG_CACHE
+                //    std::cerr << "FunctionParameter resize_nr_of_derivatives: " << this->name << " #deriv=" <<  e->number_of_derivatives() << " of ";
+                //    e->print(std::cerr); std::cerr << std::endl; 
+                //#endif
             }
   
            virtual typename Expression<T>::Ptr clone() {
@@ -224,6 +223,21 @@ namespace KDL {
             FunctionDefinition::Ptr            definition;
             boost::shared_ptr< Expression<T> > body_expr;   // typed copy of definition->body_expr
 
+            void print_state(const std::string& msg) {
+                std::cout << definition->getName() << ":"<< msg<< " : invalidated="<<invalidated
+                          << ": #deriv="<< number_of_derivatives() 
+                          <<" : value=" << cached_value << " : cached_derivative(";
+                for (auto &pair: cached_derivatives) {
+                    std::cout << "(" << pair.first << "=" << pair.second << ")";
+                }
+                std::cout << ")"<<std::endl;
+                std::cout << definition->getName() << ":"<<msg<<" : arguments=";
+                for (auto el:arguments) {  
+                    el->print(std::cout);
+                    std::cout<<"   ";
+                }
+                std::cout << std::endl;
+            }
 
             // assuming valid ndx:
             void addArg(int ndx, boost::shared_ptr<ExpressionBase> arg ) {
@@ -233,58 +247,50 @@ namespace KDL {
                 }
                 if (!arguments[ndx])  argcount++;   // if not already added, increase the argcount
                 arguments[ndx] = arg;               // if already specified, overwrite
-                if (argcount==definition->getNrOfParam()) {
-                    // number of derivatives and dependencies may have changed:
-                    std::set<int> varset;
-                    definition->pushArgStack( &arguments );
-                    body_expr->resize_nr_of_derivatives();
-                    body_expr->getDependencies(varset);
-                    definition->popArgStack();
-                    cached_derivatives.clear();
-                        #ifdef EG_LOG_CACHE
-                        std::cout << "cached_derivative indices : ";
-                        #endif
-                    for (auto el: varset) {
-                            #ifdef EG_LOG_CACHE
-                            std::cout << el << "\t";
-                            #endif
-                        cached_derivatives[el] = AutoDiffTrait<DerivType>::zeroValue(); 
-                    }
-                        #ifdef EG_LOG_CACHE
-                        std::cout << std::endl;
-                        #endif
-                }
-                invalidated=true;
             }
             void ensure_computed() {
                 if (invalidated) {
+                    definition->pushArgStack( &arguments );     
+                    if (first_time) {
+                        if (argcount==definition->getNrOfParam()) {
+                            // number of derivatives and dependencies may have changed:
+                            std::set<int> varset;
+                            body_expr->resize_nr_of_derivatives();
+                            body_expr->getDependencies(varset);
+                            cached_derivatives.clear();
+                            for (auto el: varset) {
+                                cached_derivatives[el] = AutoDiffTrait<DerivType>::zeroValue(); 
+                            }
+                            #ifdef EG_LOG_CACHE
+                            definition->popArgStack();
+                            print_state("addArg");
+                            definition->pushArgStack( &arguments );     
+                            #endif
+                            first_time=false;
+                        } else {
+                            throw WrongNumberOfArgumentsException(); 
+                        }
+                    }
                     if (argcount!=definition->getNrOfParam()) {
                         throw WrongNumberOfArgumentsException(); 
                     }
-                    definition->pushArgStack( &arguments );     
                     body_expr->update_variabletype_from_original(); // invalidate all cache
                     cached_value = body_expr->value();
-                        #ifdef EG_LOG_CACHE
-                        std::cout << "cached_derivative indices during ensure_compute : ";
-                        #endif
                     for (auto &pair: cached_derivatives) {
-                             #ifdef EG_LOG_CACHE
-                             std::cout << pair.first << "\t";
-                             #endif
                          pair.second = body_expr->derivative(pair.first);
-                             #ifdef EG_LOG_CACHE
-                             std::cout << "cached_derivative[" << pair.first << "]=" << pair.second << "\t\t";
-                             #endif
                     }
-                        #ifdef EG_LOG_CACHE
-                        std::cout << std::endl;
-                        #endif
                     definition->popArgStack();
+                    #ifdef EG_LOG_CACHE
+                    print_state("ensure_computed recompute ");
+                    #endif
                     invalidated=false;    
                 } else {
+                    #ifdef EG_LOG_CACHE
+                    print_state("ensure_computed cached");
+                    #endif
                 }
             } 
-
+            
         public:
             
             explicit FunctionEvaluation( 
