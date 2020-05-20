@@ -22,7 +22,7 @@
 #include <expressiongraph/expressiontree_integral.hpp>
 #include <expressiongraph/integrator.hpp>
 
-#define EG_LOG_INTEGRALNODE
+//#define EG_LOG_INTEGRALNODE
 namespace KDL {
 
     inline bool contains(const std::set<int>& s, const std::vector<int>& vec) {
@@ -96,103 +96,105 @@ namespace KDL {
 
     void IntegralNode::ensure_initialized() {
         if (first_time) {
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << "initialize() entered" << std::endl;
+        #endif
+        // getting dependency information 
+        lower->getDependencies(set_lower);
+        upper->getDependencies(set_upper);
+        integrand->getBodyExpression<double>()->getDependencies(set_integrand); 
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << "dependency of lower limit : ";
+        #endif
+        for (auto &&e : set_lower) {     
+            cached_derivatives[e] = 0.0;
             #ifdef EG_LOG_INTEGRALNODE
-            std::cout << "initialize() entered" << std::endl;
+            std::cout << e << " " <<std::endl;
             #endif
-            // getting dependency information 
-            lower->getDependencies(set_lower);
-            upper->getDependencies(set_upper);
-            integrand->getBodyExpression<double>()->getDependencies(set_integrand); 
+        }
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << std::endl;
+        std::cout << "dependency of upper limit : ";
+        #endif
+        for (auto &&e : set_upper) {
+            cached_derivatives[e] = 0.0;
             #ifdef EG_LOG_INTEGRALNODE
-            std::cout << "dependency of lower limit : ";
+            std::cout << e << " " <<std::endl;
             #endif
-            for (auto &&e : set_lower) {     
-                cached_derivatives[e] = 0.0;
-                #ifdef EG_LOG_INTEGRALNODE
-                std::cout << e << " " <<std::endl;
-                #endif
-            }
+        }
+        int ndx=1;
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << std::endl;
+        std::cout << "dependency of integrand : " << std::endl;
+        #endif
+        index_map.resize( set_integrand.size()+1 );
+        for (auto &&e : set_integrand) {
             #ifdef EG_LOG_INTEGRALNODE
-            std::cout << std::endl;
-            std::cout << "dependency of upper limit : ";
+            std::cout << "         index_map[ndx] with ndx=" << ndx << " and index_map[ndx]= "<<e << std::endl;
             #endif
-            for (auto &&e : set_upper) {
-                cached_derivatives[e] = 0.0;
-                #ifdef EG_LOG_INTEGRALNODE
-                std::cout << e << " " <<std::endl;
-                #endif
-            }
-            int ndx=1;
-            #ifdef EG_LOG_INTEGRALNODE
-            std::cout << std::endl;
-            std::cout << "dependency of integrand : " << std::endl;
-            #endif
-            index_map.resize( set_integrand.size()+1 );
-            for (auto &&e : set_integrand) {
-                #ifdef EG_LOG_INTEGRALNODE
-                std::cout << "         index_map[ndx] with ndx=" << ndx << " and index_map[ndx]= "<<e << std::endl;
-                #endif
-                cached_derivatives[e] = 0.0;
-                index_map[ndx] = e;
-                ndx = ndx + 1;
-            }
-            #ifdef EG_LOG_INTEGRALNODE
-            std::cout << std::endl;
-            std::cout << "Is integrand constant() " << integrand->getBodyExpression<double>()->isConstant() << std::endl;
-            #endif
-            cached_value=0.0;
-            invalidated=true;
-            integrator = boost::make_shared< IntegratorAdaptiveSimpson >( 
-                epsilon, 
-                minRecDepth, 
-                maxRecDepth, 
-                set_integrand.size()+1
-            );
+            cached_derivatives[e] = 0.0;
+            index_map[ndx] = e;
+            ndx = ndx + 1;
+        }
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << std::endl;
+        std::cout << "Is integrand constant() " << integrand->getBodyExpression<double>()->isConstant() << std::endl;
+        #endif
+        cached_value=0.0;
+        invalidated=true;
+        integrator = boost::make_shared< IntegratorAdaptiveSimpson >( 
+            epsilon, 
+            minRecDepth, 
+            maxRecDepth, 
+            set_integrand.size()+1
+        );
 
-            var = Variable<double>({});
-            func_eval.reset( new FunctionEvaluation<double>(integrand,{var}));
+        var = Variable<double>({});
+        func_eval.reset( new FunctionEvaluation<double>(integrand,{var}));
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << "Function evaluation node "<< std::endl;
+        std::cout << "    " << func_eval << std::endl;
+        std::cout << "    isConstant() " << func_eval->isConstant() << std::endl;
+        std::set<int> fset;
+        func_eval->getDependencies(fset); 
+        std::cout << "    dependencies : "; 
+        for (auto && e: fset) {
+            std::cout << e<<" ";
+        }
+        std::cout << std::endl;
+        #endif
+        int vecsize = set_integrand.size()+1;
+        result = new double[vecsize];
+        func =  [=](double arg,double* result)->void {
+            var->setValue(arg);         
+            func_eval->update_variabletype_from_original();
+            result[0] = func_eval->value();
             #ifdef EG_LOG_INTEGRALNODE
-            std::cout << "Function evaluation node "<< std::endl;
-            std::cout << "    " << func_eval << std::endl;
-            std::cout << "    isConstant() " << func_eval->isConstant() << std::endl;
-            std::set<int> fset;
-            func_eval->getDependencies(fset); 
-            std::cout << "    dependencies : "; 
-            for (auto && e: fset) {
-                std::cout << e<<" ";
+                std::cout << "evaluate at " << arg << " resulting in " << result[0];
+            #endif
+            int i=1;
+            for (auto&& ndx : set_integrand) {
+                result[i] = func_eval->derivative(ndx);
+                #ifdef EG_LOG_INTEGRALNODE
+                std::cout << "\t("<<ndx<<")" << result[i];
+                #endif
+                i = i + 1;
             }
+            #ifdef EG_LOG_INTEGRALNODE
             std::cout << std::endl;
             #endif
-            int vecsize = set_integrand.size()+1;
-            result = new double[vecsize];
-            func =  [=](double arg,double* result)->void {
-                var->setValue(arg);         
-                func_eval->update_variabletype_from_original();
-                result[0] = func_eval->value();
-                #ifdef EG_LOG_INTEGRALNODE
-                    std::cout << "evaluate at " << arg << " resulting in " << result[0];
-                #endif
-                int i=1;
-                for (auto&& ndx : set_integrand) {
-                    result[i] = func_eval->derivative(ndx);
-                    #ifdef EG_LOG_INTEGRALNODE
-                    std::cout << "\t("<<ndx<<")" << result[i];
-                    #endif
-                    i = i + 1;
-                }
-                #ifdef EG_LOG_INTEGRALNODE
-                std::cout << std::endl;
-                #endif
-                return;
-            };
-            #ifdef EG_LOG_INTEGRALNODE
-            std::cout << "initialize() exited" << std::endl;
-            #endif
+            return;
+        };
+        #ifdef EG_LOG_INTEGRALNODE
+        std::cout << "initialize() exited" << std::endl;
+        #endif
             first_time=false;
         }
     }
     void IntegralNode::ensure_computed() {
         if (invalidated) {
+            double lowerval = lower->value();  // this needs to be done before initialize!
+            double upperval = upper->value();
             ensure_initialized();
             #ifdef EG_LOG_INTEGRALNODE
             std::cout << "recompute value and derivatives :";
@@ -201,8 +203,6 @@ namespace KDL {
                 el.second = 0.0;
             }
             // Integral(f,a,b)->deriv(i) = Integral( f->deriv(i),a,b) + f( b)*b->deriv(i) - f(a)*a->deriv(i) 
-            double lowerval = lower->value();
-            double upperval = upper->value();
             int errcode =  integrator->integrate(func,lowerval,upperval,result);
             cached_value = result[0];
             for (auto &e: cached_derivatives) {
@@ -299,65 +299,78 @@ namespace KDL {
     }
 
     void IntegralNode::setInputValues(const std::vector<double>& values) {
-        throw NotImplementedException();
-        /*if (contains(set_integrand,values)) {
-            func_eval->setInputValues(values);
-            invalidated=true;
-        }
-        if (contains(set_lower,values)) {
+        if (first_time) {
+            integrand->getBodyExpression<double>()->setInputValues(values);
             lower->setInputValues(values);
-            invalidated=true;
-        }
-        if (contains(set_upper,values)) {
             upper->setInputValues(values);
             invalidated=true;
-        }*/
+        } else {
+            // use our knowledge of the dependencies to avoid unnecessary eval. of the integral
+            for (int i =0;i<values.size();++i) {
+                if ((set_integrand.count(i)>0)||(set_lower.count(i)>0)||(set_upper.count(i)>0)) {
+                    func_eval->setInputValues(values);
+                    lower->setInputValues(values);
+                    upper->setInputValues(values);
+                    invalidated=true;
+                    return;
+                }
+            }
+        }
     }
 
     void IntegralNode::setInputValue(int variable_number, double val) {
-        ensure_initialized();
-        if (set_integrand.count(variable_number)>0) {
-            func_eval->setInputValue(variable_number,val);
-            invalidated=true;
-        }
-        if (set_lower.count(variable_number)>0) {
+        if (first_time) {
+            integrand->getBodyExpression<double>()->setInputValue(variable_number,val);
             lower->setInputValue(variable_number,val);
-            invalidated=true;
-        }
-        if (set_upper.count(variable_number)>0) {
             upper->setInputValue(variable_number,val);
             invalidated=true;
+        } else {
+            // use our knowledge of the dependencies to avoid unnecessary eval. of the integral
+            if (set_integrand.count(variable_number)>0) {
+                func_eval->setInputValue(variable_number,val);
+                invalidated=true;
+            }
+            if (set_lower.count(variable_number)>0) {
+                lower->setInputValue(variable_number,val);
+                invalidated=true;
+            }
+            if (set_upper.count(variable_number)>0) {
+                upper->setInputValue(variable_number,val);
+                invalidated=true;
+            }
         }
     }
 
     void IntegralNode::setInputValue(int variable_number, const Rotation& val) {
-        ensure_initialized();
-        if ((set_integrand.count(variable_number)>0) ||
-            (set_integrand.count(variable_number+1)>0) ||
-            (set_integrand.count(variable_number+2)>0)
-           ) {
-            func_eval->setInputValue(variable_number,val);
-            invalidated=true;
-        }
-        if ((set_lower.count(variable_number)>0) ||
-            (set_lower.count(variable_number+1)>0) ||
-            (set_lower.count(variable_number+2)>0)
-           ) {
+        if (first_time) {
+            integrand->getBodyExpression<double>()->setInputValue(variable_number,val);
             lower->setInputValue(variable_number,val);
-            invalidated=true;
-        }
-        if ((set_upper.count(variable_number)>0)   ||
-            (set_upper.count(variable_number+1)>0) ||
-            (set_upper.count(variable_number+2)>0)
-           ) {
             upper->setInputValue(variable_number,val);
             invalidated=true;
-        }
-        func_eval->setInputValue(variable_number,val);
-        lower->setInputValue(variable_number,val);
-        upper->setInputValue(variable_number,val);
+        } else {
+            if ((set_integrand.count(variable_number)>0) ||
+                (set_integrand.count(variable_number+1)>0) ||
+                (set_integrand.count(variable_number+2)>0)
+               ) {
+                func_eval->setInputValue(variable_number,val);
+                invalidated=true;
+            }
+            if ((set_lower.count(variable_number)>0) ||
+                (set_lower.count(variable_number+1)>0) ||
+                (set_lower.count(variable_number+2)>0)
+               ) {
+                lower->setInputValue(variable_number,val);
+                invalidated=true;
+            }
+            if ((set_upper.count(variable_number)>0)   ||
+                (set_upper.count(variable_number+1)>0) ||
+                (set_upper.count(variable_number+2)>0)
+               ) {
+                upper->setInputValue(variable_number,val);
+                invalidated=true;
+            }
+         }
     }
-
     int IntegralNode::number_of_derivatives() {
         ensure_initialized();
         return std::max( { 
@@ -385,21 +398,21 @@ namespace KDL {
         return false;
     }
     void IntegralNode::getDependencies(std::set<int>& varset) {
-        ensure_initialized();
+        //ensure_initialized();
         lower->getDependencies(varset);
         upper->getDependencies(varset);
         integrand->getBodyExpression<double>()->getDependencies(varset); 
     }
 
     void IntegralNode::getScalarDependencies(std::set<int>& varset) {
-        ensure_initialized();
+        //ensure_initialized();
         lower->getDependencies(varset);
         upper->getDependencies(varset);
         integrand->getBodyExpression<double>()->getDependencies(varset); 
     }
 
     void IntegralNode::getRotDependencies(std::set<int>& varset) {
-        ensure_initialized();
+        //ensure_initialized();
         lower->getDependencies(varset);
         upper->getDependencies(varset);
         integrand->getBodyExpression<double>()->getDependencies(varset); 
@@ -499,7 +512,7 @@ namespace KDL {
     void IntegralNode::print(std::ostream& os) const {
         os << "Integral(lower=";lower->print(os);
         os << ", upper=";upper->print(os);
-        os << ", integrand = "; func_eval->print(os);
+        os << ", integrand = "<< integrand->getName();
         os << ")"; 
         //os << "" << Expression<ResultType>::name << "(";
         //for (unsigned int i=0;i<arguments.size();++i) {
