@@ -908,6 +908,264 @@ public:
     } 
 };
 
+template< typename ResultType, typename T1,typename  T2,typename T3, typename T4>
+class QuaternaryExpression: public Expression<ResultType> {
+public:
+    typedef Expression<T1>                      Argument1Expr;
+    typedef Expression<T2>                      Argument2Expr;
+    typedef Expression<T3>                      Argument3Expr;
+    typedef Expression<T4>                      Argument4Expr;
+
+    typename Argument1Expr::Ptr argument1;
+    typename Argument2Expr::Ptr argument2;
+    typename Argument3Expr::Ptr argument3;
+    typename Argument4Expr::Ptr argument4;
+
+
+
+    QuaternaryExpression() {}
+
+    QuaternaryExpression( const std::string& name,
+                      const typename Argument1Expr::Ptr& arg1ptr,
+                      const typename Argument2Expr::Ptr& arg2ptr,
+                      const typename Argument3Expr::Ptr& arg3ptr,
+                      const typename Argument4Expr::Ptr& arg4ptr
+                      ):
+        Expression<ResultType>(name),
+        argument1(checkConstant<T1>(arg1ptr)),
+        argument2(checkConstant<T2>(arg2ptr)),
+        argument3(checkConstant<T3>(arg3ptr)),
+        argument4(checkConstant<T4>(arg4ptr)) {
+    }
+
+    virtual void setInputValues(const std::vector<double>& values) {
+        argument1->setInputValues(values);
+        argument2->setInputValues(values);
+        argument3->setInputValues(values);
+        argument4->setInputValues(values);
+    }
+
+    virtual void setInputValue(int variable_number, double val) {
+        argument1->setInputValue(variable_number,val);
+        argument2->setInputValue(variable_number,val);
+        argument3->setInputValue(variable_number,val);
+        argument4->setInputValue(variable_number,val);
+    }
+
+    virtual void setInputValue(int variable_number, const Rotation& val) {
+        argument1->setInputValue(variable_number,val);
+        argument2->setInputValue(variable_number,val);
+        argument3->setInputValue(variable_number,val);
+        argument4->setInputValue(variable_number,val);
+    }
+
+    virtual int number_of_derivatives() {
+        int n1 = argument1->number_of_derivatives();
+        int n2 = argument2->number_of_derivatives();
+        int n3 = argument3->number_of_derivatives();
+        int n4 = argument3->number_of_derivatives();
+        return std::max(std::max(n1,n2),std::max(n3,n4));
+ 
+    } 
+    virtual void resize_nr_of_derivatives() {
+        argument1->resize_nr_of_derivatives();
+        argument2->resize_nr_of_derivatives();
+        argument3->resize_nr_of_derivatives();
+        argument4->resize_nr_of_derivatives();
+    }
+
+
+    virtual typename Expression<Frame>::Ptr subExpression_Frame(const std::string& name) {
+        typename Expression<Frame>::Ptr a;
+        a = argument1->subExpression_Frame(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Frame(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Frame(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Frame(name);
+    }
+
+    virtual typename Expression<Rotation>::Ptr subExpression_Rotation(const std::string& name) {
+        typename Expression<Rotation>::Ptr a;
+        a = argument1->subExpression_Rotation(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Rotation(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Rotation(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Rotation(name);
+    }
+
+    virtual typename Expression<Vector>::Ptr subExpression_Vector(const std::string& name) {
+        typename Expression<Vector>::Ptr a;
+        a = argument1->subExpression_Vector(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Vector(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Vector(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Vector(name);
+    }
+
+    virtual typename Expression<Wrench>::Ptr subExpression_Wrench(const std::string& name) {
+        typename Expression<Wrench>::Ptr a;
+        a = argument1->subExpression_Wrench(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Wrench(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Wrench(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Wrench(name);
+    }
+
+    virtual typename Expression<Twist>::Ptr subExpression_Twist(const std::string& name) {
+        typename Expression<Twist>::Ptr a;
+        a = argument1->subExpression_Twist(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Twist(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Twist(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Twist(name);
+    }
+
+    virtual typename Expression<double>::Ptr subExpression_Double(const std::string& name) {
+        typename Expression<double>::Ptr a;
+        a = argument1->subExpression_Double(name);
+        if (a) {
+            return a;
+        }
+        a = argument2->subExpression_Double(name);
+        if (a) {
+            return a;
+        }
+        a = argument3->subExpression_Double(name);
+        if (a) {
+            return a;
+        }
+        return argument4->subExpression_Double(name);
+    }
+
+    virtual void addToOptimizer(ExpressionOptimizer& opt) {
+        argument1->addToOptimizer(opt);
+        argument2->addToOptimizer(opt);
+        argument3->addToOptimizer(opt);
+        argument4->addToOptimizer(opt);
+    }
+
+    virtual bool isConstant() const {
+      return
+        argument1->isConstant() &&
+        argument2->isConstant() &&
+        argument3->isConstant() &&
+        argument4->isConstant();
+    }
+
+    virtual void getDependencies(std::set<int>& varset) {
+        argument1->getDependencies(varset);
+        argument2->getDependencies(varset);
+        argument3->getDependencies(varset);
+        argument4->getDependencies(varset);
+    }
+
+    virtual void getScalarDependencies(std::set<int>& varset) {
+        argument1->getScalarDependencies(varset);
+        argument2->getScalarDependencies(varset);
+        argument3->getScalarDependencies(varset);
+        argument4->getScalarDependencies(varset);
+    }
+
+    virtual void getRotDependencies(std::set<int>& varset) {
+        argument1->getRotDependencies(varset);
+        argument2->getRotDependencies(varset);
+        argument3->getRotDependencies(varset);
+        argument4->getRotDependencies(varset);
+    }
+
+    virtual void update_variabletype_from_original() {
+        argument1->update_variabletype_from_original();
+        argument2->update_variabletype_from_original();
+        argument3->update_variabletype_from_original();
+        argument4->update_variabletype_from_original();
+    }
+
+    virtual void debug_printtree() {
+        std::cout << Expression<ResultType>::name << "(";
+        argument1->debug_printtree();
+        std::cout << ",";
+        argument2->debug_printtree();
+        std::cout << ",";
+        argument3->debug_printtree();
+        std::cout << ",";
+        argument4->debug_printtree();
+        std::cout << ")";
+    }
+    virtual void print(std::ostream& os) const {
+        os << "" << Expression<ResultType>::name << "(";
+        argument1->print(os);
+        os << ",";
+        argument2->print(os);
+        os << ",";
+        argument3->print(os);
+        os << ",";
+        argument4->print(os);
+        os << ")";
+    }
+
+    virtual void write_dotfile_update(std::ostream& of, pnumber& thisnode) {
+        thisnode=(size_t)this;
+        of << "S"<<thisnode<<"[label=\"" << Expression<ResultType>::name << "\",shape=box,style=filled,fillcolor="
+           << COLOR_OPERATION << ",color=black]\n";
+        pnumber argnode1,argnode2,argnode3,argnode4;
+        argument1->write_dotfile_update(of,argnode1);
+        argument2->write_dotfile_update(of,argnode2);
+        argument3->write_dotfile_update(of,argnode3);
+        argument4->write_dotfile_update(of,argnode4);
+        of << "S"<<thisnode<<" -> " << "S"<<argnode1<< "\n"; //rev
+        of << "S"<<thisnode<<" -> " << "S"<<argnode2<< "\n"; //rev
+        of << "S"<<thisnode<<" -> " << "S"<<argnode3<< "\n"; //rev
+        of << "S"<<thisnode<<" -> " << "S"<<argnode4<< "\n"; //rev
+    }
+    virtual void write_dotfile_init() {
+        argument1->write_dotfile_init();
+        argument2->write_dotfile_init();
+        argument3->write_dotfile_init();
+        argument4->write_dotfile_init();
+    } 
+};
+
+
 template <typename _ResultType>
 class FunctionType: public Expression<_ResultType> {
 public:
@@ -2049,6 +2307,8 @@ extern template class BinaryExpression<Quaternion,double,Vector>;
 extern template class TernaryExpression<double,double,double,double>;
 extern template class TernaryExpression<Vector,double,double,double>;
 extern template class TernaryExpression<Rotation,double,double,double>;
+
+extern template class QuaternaryExpression<double,double,double,double,double>;
 
 extern template class FunctionType<double>;
 extern template class FunctionType<Vector>;

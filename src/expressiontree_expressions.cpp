@@ -236,6 +236,7 @@ template class BinaryExpression<Quaternion,double,Vector>;
 template class TernaryExpression<double,double,double,double>;
 template class TernaryExpression<Vector,double,double,double>;
 template class TernaryExpression<Rotation,double,double,double>;
+template class QuaternaryExpression<double,double,double,double,double>;
 
 template class FunctionType<double>;
 template class FunctionType<Vector>;
