@@ -782,6 +782,65 @@ Expression<double>::Ptr sqr(Expression<double>::Ptr a) {
     return expr;
 }
 
+class EarliestValue_double:
+    public QuaternaryExpression<double,double,double,double,double> {
+    double earliest_progress;
+    double earliest_value;
+public:
+    typedef QuaternaryExpression<double,double,double,double,double> QuatExpr;
+
+    EarliestValue_double() {}
+    EarliestValue_double( 
+        typename Expression<double>::Ptr progress,
+        typename Expression<double>::Ptr condition,
+        typename Expression<double>::Ptr a,
+        typename Expression<double>::Ptr b
+    ):QuatExpr("earliest_value",progress,condition,a,b) {
+        earliest_progress = 1E30;
+        earliest_value    = 0.0;
+    }
+    virtual double value() {
+        double progress_val = this->argument1->value();
+        if (progress_val <= earliest_progress) {
+            double condition_val = this->argument2->value(); 
+            if (condition_val<0) {
+                return this->argument4->value();
+            } else { 
+                earliest_progress = progress_val;
+                earliest_value    = this->argument3->value();
+                return earliest_value;
+            }
+        } else {
+           return earliest_value; 
+        }
+    } 
+    
+    virtual double derivative(int i) {
+        return 0;
+    }
+    virtual typename Expression<double>::Ptr derivativeExpression(int i) {
+        return Constant<double>(0.0);
+    }
+
+    virtual typename Expression<double>::Ptr clone() {
+        typename Expression<double>::Ptr expr(
+            new EarliestValue_double(this->argument1->clone(), this->argument2->clone(), this->argument3->clone(), this->argument4->clone())
+        );
+        return expr;
+    }
+    virtual ~EarliestValue_double() {}
+};
+
+typename Expression<double>::Ptr earliest_value( 
+    typename Expression<double>::Ptr progress, 
+    typename Expression<double>::Ptr condition, 
+    typename Expression<double>::Ptr a, 
+    typename Expression<double>::Ptr b
+) {
+    return boost::make_shared<EarliestValue_double>( progress, condition, a, b );
+}
+
+
 
 boost::mt19937 rng; 
 

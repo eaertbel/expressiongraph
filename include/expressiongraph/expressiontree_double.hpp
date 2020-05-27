@@ -92,6 +92,28 @@ Expression<double>::Ptr fmod( Expression<double>::Ptr a, double b);
 
 Expression<double>::Ptr sqr(Expression<double>::Ptr a);
 
+/**
+ * Value at the earliest time that a condition holds.
+ *
+ * with progress t and condition C, it has the result r of 
+ * earliest(t,C,a,b) has the following semantics:
+ *
+ * A = { t in T |  there exists t1 t in T for which C(t1,...) >= 0 & t >= t1}
+ * tmin = min A
+ * r = a(tmin) if t in A
+ *   = b(t)    if t not in A
+ *
+ * (where t,C,a,b are all expressions)
+ * NOTE: b(t) because tmin is not known at time t when C(t,...) still > 0 
+ */
+Expression<double>::Ptr earliest_value( 
+    Expression<double>::Ptr progress, 
+    Expression<double>::Ptr condition, 
+    Expression<double>::Ptr a, 
+    Expression<double>::Ptr b
+);
+
+
 template <typename R>
 class Conditional_double:
     public TernaryExpression<R,double,R,R>
