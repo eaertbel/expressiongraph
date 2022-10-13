@@ -31,6 +31,7 @@
 #include <boost/smart_ptr.hpp>
 #include <kdl/utilities/utility.h>
 #include <vector>
+#include <unordered_set>
 #include <Eigen/Dense>
 #include <algorithm>
 #include <ostream>
@@ -1977,6 +1978,62 @@ inline typename Expression<R>::Ptr make_constant( const typename Expression<R>::
    );
    return cnst;
 }
+
+/**
+ * @brief removes the gradient information for specific variables given by their index
+ *
+ *  An extension of make_constant, but it only erases some gradients
+ *  one of the arguments is a set of indices of variables.  The partial derivatives
+ * towards these variables will be zero.
+ */
+template <typename R>
+class RemoveDependenciesType: public UnaryExpression<R,R> {
+    std::unordered_set<int> indices;
+public:
+    typedef UnaryExpression<R,R> UnExpr;
+    typedef typename AutoDiffTrait<R>::DerivType DerivType;
+    
+    RemoveDependenciesType() {}
+
+    RemoveDependenciesType(typename UnExpr::ArgumentExpr::Ptr arg, const std::unordered_set<int>& _indices ):
+        indices(_indices),
+        UnaryExpression<R,R>("remove_dependencies",arg) {}
+
+    virtual R value() {
+        return this->argument->value();
+    }
+    virtual DerivType derivative(int i) {
+        if (indices.find(i)!= indices.end()) {
+            return AutoDiffTrait<R>::zeroDerivative();
+        } else {
+            return this->argument->derivative(i);
+        }
+    }
+    virtual typename Expression<DerivType>::Ptr derivativeExpression(int i) {
+        if (indices.find(i)!= indices.end()) {
+            return Constant(  AutoDiffTrait<R>::zeroDerivative());
+        } else {
+            return this->argument->derivativeExpression(i);
+        }
+    }
+    virtual typename Expression<R>::Ptr clone() {
+        typename Expression<R>::Ptr expr(
+            new RemoveDependenciesType( this->argument->clone(), indices )
+        );
+        return expr;
+    }
+};
+
+template<typename R>
+inline typename Expression<R>::Ptr remove_dependencies( const typename Expression<R>::Ptr& arg, const std::unordered_set<int>& _indices ) {
+   typename Expression<R>::Ptr cnst(
+        new RemoveDependenciesType<R>( arg, _indices )
+   );
+   return cnst;
+}
+
+
+
 
 /**
  * This expressiongraph node represents a constant value corresponding to 
