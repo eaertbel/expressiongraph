@@ -100,7 +100,7 @@ public:
 
     MIMO_Output() {}
     MIMO_Output(const std::string& name, MIMO::Ptr _mimo):
-                    Expression<double>(name),
+                    Expression<ResultType>(name),
                     nr_of_clones(-1),
                     mimo(_mimo)
                 {}
