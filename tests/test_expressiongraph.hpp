@@ -390,8 +390,8 @@ template <class T>
                                                const char* mstr,
                                                boost::shared_ptr< Expression<T> > m
                                                ) {
-  double h   = 1E-9;
-  double tol = 1E-4;
+  double h   = 1E-5; // Tolerances are now higher in new version of KDL!
+  double tol = 1E-3;
   typedef typename AutoDiffTrait<T>::DerivType Td;
   // generate arbitrary input for the expression:
   int n1 = m->number_of_derivatives();
