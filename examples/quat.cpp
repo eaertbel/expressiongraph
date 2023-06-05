@@ -39,7 +39,7 @@ void test_operations(Quaternion q1, Quaternion q2) {
         cout << "R1*a " << (R1*a) << " and norm of R1*a " << (R1*a).Norm() << endl;
         cout << "conj(q) * a * q " << q1*Quaternion(0,a)*conj(q1) << endl;
         cout << "conj(q) * a * q " << q1*Quaternion(0,a)*inv(q1) << endl;
-        cout << "appy(a,a) " << apply(q1,a) << endl;
+        cout << "appy(a,a) " << KDL::apply(q1,a) << endl;
 
         Vector axis,axis1,axis2;
         double angle,angle1,angle2;

@@ -73,20 +73,20 @@ int main(int argc,char* argv[]) {
     double L4=0.078;
 
     Chain chain;
-    chain.addSegment(Segment("Segment 0", Joint("Joint 0", Joint::RotZ),Frame(Vector(0,0,L1))));
-    chain.addSegment(Segment("Segment 1", Joint("Joint 1", Joint::RotX),Frame(Vector(0,0,0))));
-    chain.addSegment(Segment("Segment 2", Joint("Joint 2", Joint::RotZ),Frame(Vector(0,0,L2))));
-    chain.addSegment(Segment("Segment 3", Joint("Joint 3", Joint::RotX),Frame(Vector(0,0,0))));
-    chain.addSegment(Segment("Segment 4", Joint("Joint 4", Joint::RotZ),Frame(Vector(0,0,L3))));
-    chain.addSegment(Segment("Segment 5", Joint("Joint 5", Joint::RotX),Frame(Vector(0,0,L4))));
-    chain.addSegment(Segment("Segment 6", Joint("Joint 6", Joint::RotZ),Frame(Vector(0,0,0))));
+    chain.addSegment(Segment("Segment 0", Joint("Joint 0", Joint::RotZ),Frame(KDL::Vector(0,0,L1))));
+    chain.addSegment(Segment("Segment 1", Joint("Joint 1", Joint::RotX),Frame(KDL::Vector(0,0,0))));
+    chain.addSegment(Segment("Segment 2", Joint("Joint 2", Joint::RotZ),Frame(KDL::Vector(0,0,L2))));
+    chain.addSegment(Segment("Segment 3", Joint("Joint 3", Joint::RotX),Frame(KDL::Vector(0,0,0))));
+    chain.addSegment(Segment("Segment 4", Joint("Joint 4", Joint::RotZ),Frame(KDL::Vector(0,0,L3))));
+    chain.addSegment(Segment("Segment 5", Joint("Joint 5", Joint::RotX),Frame(KDL::Vector(0,0,L4))));
+    chain.addSegment(Segment("Segment 6", Joint("Joint 6", Joint::RotZ),Frame(KDL::Vector(0,0,0))));
 
     Expression<Frame>::Ptr kinchain = cached<Frame>(
-         Constant(Frame(Vector(0,0,0.5))) * kinematic_chain( chain, 0 ) * Constant(Frame(Vector(0,0,0.3)))
+         Constant(Frame(KDL::Vector(0,0,0.5))) * kinematic_chain( chain, 0 ) * Constant(Frame(KDL::Vector(0,0,0.3)))
     );
-    Expression<Frame>::Ptr  line                  = Constant( Frame(Rotation::Identity(), Vector(0.2,0.2,0.0))); // z axis of frame corresponds to line.
+    Expression<Frame>::Ptr  line                  = Constant( Frame(Rotation::Identity(), KDL::Vector(0.2,0.2,0.0))); // z axis of frame corresponds to line.
     // constraint 1:
-    Expression<Vector>::Ptr tmp                   = cached<Vector>( inv(line) * origin(kinchain) );
+    Expression<KDL::Vector>::Ptr tmp                   = cached<KDL::Vector>( inv(line) * origin(kinchain) );
     Expression<double>::Ptr distance_to_line      = coord_x(tmp)*coord_x(tmp) + coord_y(tmp)*coord_y(tmp) - Constant(0.1*0.1);
     // constraint 2:
     Expression<double>::Ptr perpendicular_to_line = dot( unit_z(rotation(line)), unit_z(rotation(kinchain)));
