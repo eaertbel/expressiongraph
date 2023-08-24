@@ -54,7 +54,7 @@ namespace KDL {
         void setPlan(double spos, double epos, double vmax, double amax);
 
         double planMinDuration();
-        double adaptDuration(double new_duration);
+        void adaptDuration(double new_duration);
         /**
          * derivatives only to be used when this is the critical motion profile
          */

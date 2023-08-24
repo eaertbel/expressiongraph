@@ -513,6 +513,7 @@ public:
     } 
     virtual Expression<Vector>::Ptr derivativeExpression(int i) {
         assert( 0 /*not yet implemented */ );
+        return KDL::Constant(KDL::Vector::Zero());
     }
     virtual TExpr::Ptr clone() {
         TExpr::Ptr expr( new Construct_Rotation( argument1->clone(), argument2->clone(), argument3->clone()));

@@ -35,7 +35,7 @@ double MPTrap::planMinDuration() {
     return duration;
 }
 
-double MPTrap::adaptDuration(double new_duration) {
+void MPTrap::adaptDuration(double new_duration) {
     double f = duration/new_duration;
     t1       = t1 / f;
     t2       = t2 / f;
